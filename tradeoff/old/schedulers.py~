@@ -1,0 +1,65 @@
+import task
+import containers
+
+#Possible actions
+NEW_CONTAINER = 1
+ASSIGN_CONTAINER = 2
+WAIT = 3
+
+"""
+Schedulers
+
+Contains functions that generate what operation should be performed by a system when presented with a new task.
+
+Inputs
+state - the system state represented by a mapping of system variables to there values
+containers - the set of containers in the system
+tasks - the set of tasks being added
+time - the current time
+
+Returns a list of list, where each element is an action to perform, with each action containing the chosen action and any parameters of the action [<action type>, ... <additional parameters>]
+Possible actions
+NEW_CONTAINER - give list of tasks being added - [NEW_CONTAINER, [<tasks>]]
+ASSIGN_CONTAINER - give list of tasks being added - [ASSIGN_CONTAINER, <container>, [<tasks>]]
+WAIT - give a list of tasks to perform no action on until the specified time - [WAIT, <wait time in milliseconds>, [<tasks>]]
+"""
+
+import random
+
+"""
+Random scheduler:
+Assigns all tasks to random containers (including new containers)
+"""
+def random_scheduler(state, containers, tasks, time):
+
+    #Creates a list of containers to maintain an order
+    container_list = list(containers)
+    
+    #Assigns each container an index for random selection, and initializes a map to store tasks assigned to that container
+    container_map = {}
+    for container in range(len(containers)):
+        container_map[container] = []
+
+    #Initializes a set to track new containers, that need to be created
+    new_containers = set()
+
+    #Chooses containers for each task
+    for task in tasks:
+        #Select a random option: if choice < len(container_list), then the container at that index is chosen, else if choice == len(container_list) a new container is created
+        choice = random.randint(0, len(container_map))
+        if choice not in container_map.keys():
+            new_containers.add(choice)
+            container_map[choice] = [task]
+        else:
+            container_map[choice].append(task)
+
+    #Creates action list
+    actions = []
+
+    for container in container_map.keys():
+        if container in new_containers:
+            actions.append([NEW_CONTAINER, container_map.get(container)])
+        elif not container_map.get(container).isempty():
+            actions.append([ASSIGN_CONTAINER, container_list[container], container_map.get(container)])
+    
+    return actions

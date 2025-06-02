@@ -1,0 +1,65 @@
+import schedulers
+import container
+import task
+
+"""
+Controller
+
+Inputs
+tasks - map of tasks (key) to receival times (value)
+scheduler - the scheduler being used
+
+Internal variables
+time - current system time in milliseconds
+state - mapping of system variables to values
+containers - the current containers running in the system
+scheduler - a function that models the scheduler
+tasks - the list of tasks sorted by release time
+
+State variables
+wait_time - integer set to 0 if no wait time set, otherwise wait at most this time before repolling scheduler
+"""
+class controller:
+    def __init__(self, tasks, scheduler):
+        self.time = 0
+        self.state = {}
+        self.containers = set()
+        self.scheduler = scheduler
+
+        #Reformat tasks to be list of task and release times
+        task_list = []
+        for task in tasks.keys():
+            task_list.append([task, tasks.get(task)])
+
+        #Sort tasks by release times
+        task_list = sorted(task_list, key = lambda x: x[1])
+
+        self.tasks = task_list
+
+    """
+    Updates the system to the next time the scheduler needs to be called
+    """
+    def update(self):
+        #Next time is minimum of the next released task or wait time
+        next_time = self.tasks[0]
+        wait_time = self.state.get(wait_time)
+        if wait_time != 0:
+            change = next_time - self.time
+            self.state[wait_time] -= change
+            if wait_time < next_time:
+                next_time = wait_time
+
+        #Gets tasks that are released by the next time
+        self.time = next_time
+        new_tasks = set()
+        while self.tasks[0][1] <= self.time:
+            new_tasks.add(tasks.pop(0)[0])
+
+        #Updates the containers
+        for container in containers:
+            container.remove_finished(self.time)
+
+        #Get next scheduler
+        actions = self.scheduler(self.state, self.containers, new_tasks, self.time)
+
+    

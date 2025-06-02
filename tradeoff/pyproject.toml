@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "tradeoff"
+version = "0.1.0"
+description = ""
+authors = ["GradyThompson <grady_thompson@outlook.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+scipy = "^1.15.3"
+numpy = "^2.2.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

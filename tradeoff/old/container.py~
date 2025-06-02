@@ -1,0 +1,43 @@
+import task
+
+"""
+Container
+
+Input
+tasks - a list of tasks that the container is initially assigned
+time - time of creating the container
+
+Internal variables
+tasks - the current tasks queued to run in the container
+time - the last time the container was updated
+progress - time that commputation has already been performed on the first task 
+
+Stores and runs tasks
+"""
+class container:
+    def __init__(self, tasks, time):
+        self.tasks = list(tasks)
+        self.time = time
+        self.progress = 0
+
+    def get_tasks(self):
+        return list(self.tasks)
+
+    def add_task(self, task):
+        self.tasks.append(task)
+
+    #Removes all tasks that will finish by the inputed time
+    def update(self, time):
+        #How much time has progressed since the last update
+        change = time - self.time
+        self.time = time
+
+        #The time that the next task is starting
+        current_time = -self.progress
+
+        #Run tasks until the current time
+        while len(self.tasks) > 0 and current_time + self.tasks[0].get_execution_time() <= change:
+            current_time += self.tasks.pop(0).get_execution_time()
+
+        #Update the current progress
+        self.progress = change - current_time
