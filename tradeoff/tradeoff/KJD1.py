@@ -1,6 +1,6 @@
 import incomplete.simulated_system as sim_sys
 from job import Job
-from tradeoff.action import Action
+from tradeoff.incomplete.action import Action
 
 """
 Known job duration algorithm 1

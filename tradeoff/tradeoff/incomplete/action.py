@@ -27,12 +27,14 @@ class Action:
         container: - container being acted upon
         jobs: - Jobs being acted upon
     """
-    def __init__(self, action_type, container=None, jobs=None):
+    def __init__(self, action_type, container=None, jobs=None, time:int=0, other_information=None):
         if jobs is None:
             jobs = []
         self.action_type = action_type
         self.container = container
         self.jobs:list[Job] = jobs
+        self.time:int = time
+        self.other_information = other_information
 
     """
     Return the type of action being performed
@@ -60,3 +62,25 @@ class Action:
     """
     def get_jobs(self):
         return self.jobs
+
+    """
+    Returns the time associated with the action
+
+    Returns:
+        The time
+    """
+
+    def get_time(self):
+        return self.time
+
+    """
+    Adds additional information
+    """
+    def add_other_information(self, key, value):
+        self.other_information[key] = value
+
+    """
+    Returns other information
+    """
+    def get_other_information(self, key):
+        return self.other_information.get(key)

@@ -15,12 +15,14 @@ class Container:
 
     inputs
     curr_time - the time at the creation of the container
+    other_information - additional information that might be needed
     """
-    def __init__(self, curr_time):
+    def __init__(self, curr_time, other_information):
         self.jobs = []
         self.curr_time = curr_time
         self.start_time = curr_time
         self.job_progress = 0
+        self.other_information = other_information
 
     """
     Add a job to the container's job queue
@@ -110,3 +112,15 @@ class Container:
     """
     def get_time_alive(self):
         return self.curr_time - self.start_time
+
+    """
+    Adds additional information
+    """
+    def add_other_information(self, key, value):
+        self.other_information[key] = value
+
+    """
+    Returns other information
+    """
+    def get_other_information(self, key):
+        return self.other_information.get(key)
