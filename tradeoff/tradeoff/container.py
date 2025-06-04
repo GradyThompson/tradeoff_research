@@ -12,12 +12,15 @@ class Container:
         curr_time: the time at the creation of the container
         other_information: additional information that might be needed
     """
-    def __init__(self, curr_time:int, other_information:typing.Dict):
+    def __init__(self, curr_time:int, other_information:typing.Dict=None):
         self.jobs:list = []
         self.curr_time:int = curr_time
         self.start_time:int = curr_time
         self.job_progress:int = 0
-        self.other_information:typing.Dict = other_information
+        if other_information is None:
+            self.other_information = {}
+        else:
+            self.other_information:typing.Dict = other_information
 
     """
     Add a job to the container's job queue
