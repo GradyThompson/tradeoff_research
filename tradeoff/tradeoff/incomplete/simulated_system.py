@@ -1,4 +1,4 @@
-from tradeoff.incomplete.container import Container
+from tradeoff.container import Container
 
 """
 Class simulates a state based system of containers

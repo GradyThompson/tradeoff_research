@@ -1,7 +1,7 @@
 import incomplete.simulated_system as sim_sys
-from incomplete.container import Container
+from tradeoff.container import Container
 from job import Job
-from tradeoff.incomplete.action import Action
+from tradeoff.action import Action
 
 """
 Known job duration algorithm 2
@@ -14,7 +14,7 @@ class KJD2:
         params a list of parameters (length 1) 1. epsilon
     """
     def __init__(self, params:list):
-        self.epsilon = params[0]
+        self.epsilon:float = params[0]
 
     """
     Decides system actions based on the deterministic execution time of jobs

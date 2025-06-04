@@ -1,9 +1,9 @@
 import incomplete.simulated_system as sim_sys
 from job import Job
-from tradeoff.incomplete.action import Action
+from tradeoff.action import Action
 import math
 import typing
-from incomplete.container import Container
+from tradeoff.container import Container
 
 """
 Unknown job duration algorithm 1
