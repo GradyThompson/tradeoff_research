@@ -93,6 +93,17 @@ class Job:
         self.completion_time = time
 
     """
+    Returns the time the job was queued for
+    
+    Returns:
+        The queue time or -1 if the job is incomplete
+    """
+    def get_queue_time(self):
+        if self.completion_time == -1:
+            return -1
+        return self.completion_time - self.receival_time
+
+    """
     Define less than to be based on receival time, making jobs sorted by receival time
     
     Args:

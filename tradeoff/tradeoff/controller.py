@@ -1,9 +1,10 @@
-import queue
-from queue import PriorityQueue
 from simulated_system import SimulatedSystem
 from job import Job
 from model import Model
 import job_manager
+import heapq
+from action import Action
+import result_manager
 
 """
 Controls a state-based simulated system of jobs and machines
@@ -38,38 +39,36 @@ class Controller:
         self.results_file_name = results_file_name
         self.time:int = 0
 
-        self.jobs: list[Job] = job_manager.jobs_from_file(input_jobs_file_name)
-        self.queued_jobs: PriorityQueue[Job] = queue.PriorityQueue()
+        self.jobs:list[Job] = job_manager.jobs_from_file(input_jobs_file_name)
+        self.queued_jobs:list[Job] = []
         for job in self.jobs:
-            self.queued_jobs.put(job)
-
-    """
-    Gets the release time of the next job
-    """
-    def next_job_release_time(self):
-        job = self.queued_jobs.get()
-        self.queued_jobs.put(job)
-        
-        time = job.get_receival_time()
-        
-        return time
+            heapq.heappush(self.queued_jobs, job)
 
     """
     Runs the system until completion
+    
+    Args:
+        results_file_name: where the results of the system are stored
     """
     def control_loop(self):
+        wait_time:int = -1
         while len(self.queued_jobs) > 0:
-            next_time = self.next_job_release_time()
-            new_jobs = []
-            while len(self.queued_jobs) > 0:
-                next_job = self.queued_jobs.get()
-                if next_job.get_receival_time() != next_time:
-                    self.queued_jobs.put(next_job)
-                    break
-                else:
-                    new_jobs.append(next_job)
-            self.system_simulator.run(next_time)
-            actions = self.model.determine_actions(system=self.system_simulator, unassigned_jobs=new_jobs)
-            self.system_simulator.perform_actions(actions=actions)
+            #Prepare next set of batches and update system
+            next_time:int = self.queued_jobs[0].get_receival_time()
+            if wait_time != -1:
+                next_time = min(next_time, wait_time)
+            wait_time = -1
+            new_jobs:list[Job] = []
+            while len(self.queued_jobs) > 0 and self.queued_jobs[0].get_receival_time() <= next_time:
+                new_jobs.append(self.queued_jobs.pop(0))
+            self.system.run(next_time)
+
+            #Get and handle actions
+            actions:list[Action] = self.model.determine_actions(system=self.system, unassigned_jobs=new_jobs)
+            for action in actions:
+                if action.get_action_type() == Action.WAIT:
+                    wait_time = action.get_time()
+            self.system.perform_actions(actions=actions)
             self.time = next_time
-        self.system_simulator.finish()
+        self.system.finish()
+        result_manager.save_system_performance(self.system, self.jobs, self.results_file_name)

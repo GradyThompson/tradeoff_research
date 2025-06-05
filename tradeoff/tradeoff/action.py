@@ -9,7 +9,7 @@ terminate_container - container - terminates the provided container
 add_jobs - container, jobs - adds jobs to the provided container
 remove_jobs - container, jobs - removes the provided jobs from the provided container
 reorder_jobs - container, jobs - changes the order of jobs in the provided container
-wait - time - with no new information scheduler waits until <time> to perform action
+wait - time - scheduler requests to reevaluate after time
 """
 class Action:
     ACTIVATE_CONTAINER = 1
@@ -17,7 +17,7 @@ class Action:
     ADD_JOBS = 3
     REMOVE_JOBS = 4
     REORDER_JOBS = 5
-    WAIT = 6
+    WAIT = 20
 
     """
     Action constructor

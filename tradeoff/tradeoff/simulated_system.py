@@ -31,15 +31,15 @@ class SimulatedSystem:
     def perform_actions(self, actions:list[Action]):
         for action in actions:
             action_type = action.get_action_type()
-            if action_type == "activate_container":
+            if action_type == Action.ACTIVATE_CONTAINER:
                 self.activate_container()
-            elif action_type == "terminate_container":
+            elif action_type == Action.TERMINATE_CONTAINER:
                 self.terminate_container(action.get_container())
-            elif action_type == "add_jobs":
+            elif action_type == Action.ADD_JOBS:
                 self.assign_jobs(action.get_jobs(), action.get_container())
-            elif action_type == "remove_jobs":
+            elif action_type == Action.REMOVE_JOBS:
                 self.remove_jobs(action.get_jobs(), action.get_container())
-            elif action_type == "reorder_jobs":
+            elif action_type == Action.REORDER_JOBS:
                 self.reorder_jobs(action.get_jobs(), action.get_container())
 
     """

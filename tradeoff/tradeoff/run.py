@@ -1,4 +1,10 @@
-#File paths
-job_sets_path = "..//job_sets//"
-js_1_metadata_file = job_sets_path + "js_1_metadata.txt"
-js_1_file = job_sets_path + "js_1.txt"
+import argparse
+from controller import Controller
+
+parser = argparse.ArgumentParser()
+parser.add_argument("config_file", help="Config file containing controller information (see controller doc)")
+args = parser.parse_args()
+config_file = args.config_file
+
+controller = Controller(config_file)
+controller.control_loop()
