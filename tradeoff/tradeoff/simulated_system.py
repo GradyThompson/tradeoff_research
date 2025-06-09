@@ -32,7 +32,7 @@ class SimulatedSystem:
         for action in actions:
             action_type = action.get_action_type()
             if action_type == Action.ACTIVATE_CONTAINER:
-                self.activate_container()
+                self.activate_container(initial_jobs=action.get_jobs())
             elif action_type == Action.TERMINATE_CONTAINER:
                 self.terminate_container(action.get_container())
             elif action_type == Action.ADD_JOBS:
@@ -63,8 +63,8 @@ class SimulatedSystem:
     """
     Adds a new container to the system
     """
-    def activate_container(self):
-        self.containers.add(Container(curr_time=self.time))
+    def activate_container(self, initial_jobs:list[Job]):
+        self.containers.add(Container(curr_time=self.time, initial_jobs=initial_jobs))
 
     """
     Removes a container from the system
@@ -152,7 +152,8 @@ class SimulatedSystem:
     Completes all jobs in the system and closes all containers
     """
     def finish(self):
-        for container in self.containers:
+        existing_containers = set(self.containers)
+        for container in existing_containers:
             container.finish()
             self.terminate_container(container=container)
 

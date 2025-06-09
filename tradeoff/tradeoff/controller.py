@@ -49,8 +49,11 @@ class Controller:
     
     Args:
         results_file_name: where the results of the system are stored
+        
+    Returns:
+        The name of the file with the results
     """
-    def control_loop(self):
+    def control_loop(self)->str:
         wait_time:int = -1
         while len(self.queued_jobs) > 0:
             #Prepare next set of batches and update system
@@ -72,3 +75,4 @@ class Controller:
             self.time = next_time
         self.system.finish()
         result_manager.save_system_performance(self.system, self.jobs, self.results_file_name)
+        return self.results_file_name

@@ -12,8 +12,11 @@ class Container:
         curr_time: the time at the creation of the container
         other_information: additional information that might be needed
     """
-    def __init__(self, curr_time:int, other_information:typing.Dict=None):
-        self.jobs:list = []
+    def __init__(self, curr_time:int, initial_jobs:list[Job] = None, other_information:typing.Dict=None):
+        if initial_jobs is None:
+            self.jobs:list = []
+        else:
+            self.jobs:list = initial_jobs
         self.curr_time:int = curr_time
         self.start_time:int = curr_time
         self.job_progress:int = 0
@@ -61,8 +64,7 @@ class Container:
         time: the time to run the container until
     """
     def run(self, time:int):
-        time_delta:int = time - self.curr_time
-        while len(self.jobs) > 0 and self.jobs[0].get_execution_time() - self.job_progress <= time_delta:
+        while len(self.jobs) > 0 and self.curr_time + self.jobs[0].get_execution_time() - self.job_progress <= time:
             finished_job:Job = self.jobs.pop(0)
             self.curr_time += finished_job.get_execution_time() - self.job_progress
             finished_job.complete(self.curr_time)

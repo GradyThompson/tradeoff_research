@@ -84,10 +84,10 @@ Args:
 """
 def job_from_string(s:str)->Job:
     split_s:list[str] = s.split(",")
-    id:str = split_s[0]
+    job_id:str = split_s[0]
     execution_time:int = int(split_s[1])
     receival_time:int = int(split_s[2])
-    job = Job(id=id, execution_time=execution_time, receival_time=receival_time)
+    job = Job(job_id=job_id, execution_time=execution_time, receival_time=receival_time)
     return job
 
 """

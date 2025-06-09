@@ -1,0 +1,4 @@
+job_sets\js_1.txt
+result_data\result_FIFO_js1_c100.txt
+FIFO,FIFO,100
+1

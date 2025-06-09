@@ -19,6 +19,6 @@ File:
 def save_system_performance(system:SimulatedSystem, jobs:list[Job], data_file_name:str):
     cost:int = system.get_cost()
     with open(data_file_name, "w") as data_file:
-        data_file.write("Cost str(cost)")
+        data_file.write("Cost: " + str(cost))
         for job in jobs:
             data_file.write("\n" + str(job.get_queue_time()))

@@ -10,7 +10,7 @@ Unknown job duration algorithm 1
 """
 class UJD1:
     """
-    Constructor, saves epsilon to a class variable
+    Constructor
 
     Args:
         params a list of parameters (length 1) 1. epsilon
