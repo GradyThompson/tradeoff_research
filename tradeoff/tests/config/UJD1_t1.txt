@@ -1,0 +1,3 @@
+tests\job_sets\UJD1_t1.txt
+tests\results\UJD1_t1.txt
+UJD1,UJD1,0.5

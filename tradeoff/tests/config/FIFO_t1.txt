@@ -1,0 +1,3 @@
+tests\job_sets\FIFO_t1.txt
+tests\results\FIFO_t1.txt
+FIFO,FIFO,10

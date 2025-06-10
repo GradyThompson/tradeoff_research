@@ -1,29 +1,58 @@
-import argparse
+import typing
+
 from tradeoff.controller import Controller
-from itertools import zip_longest
 
-parser = argparse.ArgumentParser()
-parser.add_argument("config_file", help="Config file containing controller information (see controller doc)")
-parser.add_argument("expected_file", help="File containing the expected result of the system")
-args = parser.parse_args()
-config_file = args.config_file
-expected_file_name = args.expected_file
+"""
+Performs an end to end test of a model
 
-controller = Controller(config_file)
-results_file_name = controller.control_loop()
+Args:
+    config_file: the configuration file for the controller
+    expected_file_name: the name of the file containing the expected output
+"""
+def end_to_end_model_test(config_file_name:str, expected_file_name:str):
+    controller:Controller = Controller(config_file_name)
+    results_file_name:str = controller.control_loop()
 
-with open(results_file_name, 'r') as results_file, open(expected_file_name, 'r') as expected_file:
-    for line_num, (result, expected) in enumerate(zip_longest(results_file, expected_file), start=1):
-        if result != expected:
-            print(f"Different on line {line_num}:")
-            if result is not None:
-                print(f"Result {result}")
+    with open(results_file_name, 'r') as results_file, open(expected_file_name, 'r') as expected_file:
+        job_completion_times:typing.Dict[int, int] = {}
+        cost:int = 0
+        expected_job_completion_times:typing.Dict[int, int] = {}
+        expected_cost:int = 0
+
+        for line_num, line in enumerate(results_file):
+            if line_num == 0:
+                cost = int(line)
             else:
-                print("Results is shorter than expected")
+                formated_line:list[str] = line.split(",")
+                job = int(formated_line[0])
+                job_completion_times[job] = int(formated_line[1])
 
-            if expected is not None:
-                print(f"Expected {expected}")
+        for line_num, line in enumerate(expected_file):
+            if line_num == 0:
+                expected_cost = int(line)
             else:
-                print("Results is longer than expected")
-    else:
+                formated_line = line.split(",")
+                job = int(formated_line[0])
+                expected_job_completion_times[job] = int(formated_line[1])
+
+        if len(job_completion_times) < len(expected_job_completion_times):
+            print(f"Result file is too small, expected {len(expected_job_completion_times)} "
+                  f"and result is {len(job_completion_times)}")
+
+        if len(job_completion_times) > len(expected_job_completion_times):
+            print(f"Result file is too large, expected {len(expected_job_completion_times)} "
+                  f"and result is {len(job_completion_times)}")
+
+        if cost < expected_cost:
+            print(f"Cost too small, expected {expected_cost} and result is {cost}.")
+
+        if cost > expected_cost:
+            print(f"Cost too large, expected {expected_cost} and result is {cost}.")
+
+        for job in job_completion_times.keys():
+            result = job_completion_times.get(job)
+            expected = expected_job_completion_times.get(job)
+            if result != expected:
+                print(f"Different for job {job}, expected {expected}, but result was {result}")
+                return
         print("Files are identical.")
