@@ -23,7 +23,7 @@ class Job:
         self.receival_time:int = receival_time
         self.deadline:int = deadline
         self.completion_time:int = -1
-        self.other_info:typing.Dict[typing.Any, typing.Any] = {}
+        self.other_info:typing.Dict[int, str] = {}
 
     """
     Adds additional info to the job
@@ -32,7 +32,7 @@ class Job:
         key - the key the additional info can be accessed by
         value - the value stored
     """
-    def add_other_info(self, key:typing.Any, value:typing.Any):
+    def add_other_info(self, key:int, value:str):
         self.other_info[key] = value
 
     """
@@ -44,9 +44,18 @@ class Job:
     Returns:
         The attached info
     """
-    def get_other_info(self, key:typing.Any)->typing.Any:
+    def get_other_info(self, key:int)->str:
         return self.other_info.get(key)
+
+    """
+    Gets set of other information
     
+    Returns:
+        The set of keys of all other information in the job
+    """
+    def get_all_other_info(self)->set[int]:
+        return set(self.other_info.keys())
+
     """
     Returns the job id
     

@@ -2,6 +2,7 @@ from scipy.stats import poisson, expon, skewnorm
 import numpy as np
 from job import Job
 import typing
+import random
 
 """
 Generate a list jobs using meta data from a file, currently does not add deadlines
@@ -67,13 +68,39 @@ def generate_jobs(job_meta_data_file_name:str, id_prefix:str="")->list[Job]:
     return jobs
 
 """
-Returns a string representation of the job - <id>,<execution_time>,<receival_time>,<deadline>
+Generates a set of jobs with jobs around their true execution time, the bound size is chosen uniformly between 1 and the maximum,
+the bound location is chosen uniformly at random around the true execution time.
+
+Args:
+    job_meta_data_file_name: name of the file containing the job meta data
+    max_bound_size: the maximum distance between the minimum and maximum time value on the bound
+    id_prefix: optional argument that adds a prefix to the job ids
+    
+Returns:
+    list of generated jobs with bounds
+"""
+def generate_bounded_jobs(job_meta_data_file_name:str, max_bound_size:int, id_prefix:str="")->list[Job]:
+    jobs:list[Job] = generate_jobs(job_meta_data_file_name=job_meta_data_file_name, id_prefix=id_prefix)
+    for job in jobs:
+        bound_size:int = random.randint(1, max_bound_size)
+        bound_location:int = random.randint(1, bound_size)
+        true_time:int = job.get_execution_time()
+        min_bound:int = max(1, true_time+1-bound_location)
+        max_bound:int = true_time+bound_size-bound_location
+        job.add_other_info(key=Job.EXECUTION_TIME_LOWER_BOUND, value=str(min_bound))
+        job.add_other_info(key=Job.EXECUTION_TIME_UPPER_BOUND, value=str(max_bound))
+    return jobs
+
+"""
+Returns a string representation of the job - <id>,<receival_time>,<execution_time>,<deadline>
 
 Args:
     job: the job
 """
 def job_to_string(job:Job)->str:
-    s = str(job.get_id()) + "," + str(job.get_execution_time()) + "," + str(job.get_receival_time())
+    s = str(job.get_id()) + "," + str(job.get_receival_time()) + "," + str(job.get_execution_time())
+    for other_info_key in job.get_all_other_info():
+        s += "," + str(job.get_other_info(other_info_key))
     return s
     
 """
@@ -85,9 +112,14 @@ Args:
 def job_from_string(s:str)->Job:
     split_s:list[str] = s.split(",")
     job_id:str = split_s[0]
-    execution_time:int = int(split_s[1])
-    receival_time:int = int(split_s[2])
+    receival_time:int = int(split_s[1])
+    execution_time:int = int(split_s[2])
     job = Job(job_id=job_id, execution_time=execution_time, receival_time=receival_time)
+    other_info_str:list[str] = split_s[3:]
+    i = 0
+    while i < len(other_info_str):
+        job.add_other_info(int(other_info_str[i]), other_info_str[i+1])
+        i += 2
     return job
 
 """
@@ -105,7 +137,6 @@ def jobs_to_file(jobs:list[Job], file_name:str):
             file.write(s + "\n")
         else:
             file.write(s)
-
 
 """
 Loads a list of jobs from a file

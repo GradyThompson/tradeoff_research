@@ -1,3 +1,0 @@
-1000,1,120,poisson,4,1
-500,50,70,exponential,10,1
-1000,80,150,skew_normal,5,2,3

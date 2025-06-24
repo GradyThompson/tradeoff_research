@@ -52,13 +52,13 @@ class UJD2:
 
         # Assign Jobs to new containers
         while (job_ind < len(sorted_jobs)
-               and time + sum([job.get_execution_time() for job in sorted_jobs[job_ind:]])
+               and time + sum([int(job.get_other_info(Job.EXECUTION_TIME_UPPER_BOUND)) for job in sorted_jobs[job_ind:]])
                >= sorted_jobs[job_ind].get_receival_time() + max_delay - delta):
             curr_job_time = 0
             assigned_jobs = []
             while job_ind < len(sorted_jobs) and delta + curr_job_time <= max_delay:
                 assigned_jobs.append(sorted_jobs[job_ind])
-                curr_job_time += sorted_jobs[job_ind].get_execution_time()
+                curr_job_time += int(sorted_jobs[job_ind].get_other_info(Job.EXECUTION_TIME_UPPER_BOUND))
                 job_ind += 1
             if len(assigned_jobs) > 0:
                 actions.append(Action(action_type=Action.ACTIVATE_CONTAINER, jobs=assigned_jobs))

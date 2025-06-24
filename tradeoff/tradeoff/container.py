@@ -5,6 +5,8 @@ import typing
 Container class, that models a machine/container in the system, that can run jobs sequentially
 """
 class Container:
+    JOB_EPOCH = 1
+
     """
     Instantiate a container
 
