@@ -48,7 +48,7 @@ class UJD1:
         #Create mapping of epochs in containers
         epoch_containers:typing.Dict[int, set[Container]] = {}
         for container in system.get_containers():
-            container_epoch:int = container.get_other_information(Container.JOB_EPOCH)
+            container_epoch:int = int(container.get_other_information(Container.JOB_EPOCH))
             if container_epoch not in epoch_containers.keys():
                 epoch_containers[container_epoch] = set()
             epoch_containers.get(container_epoch).add(container)
@@ -100,13 +100,13 @@ class UJD1:
                     actions.append(Action(action_type=Action.ADD_JOBS,
                                           container=container,
                                           jobs=existing_container_job_assignment.get(container),
-                                          other_information={Container.JOB_EPOCH:epoch}))
+                                          other_information={Container.JOB_EPOCH:str(epoch)}))
 
                 #Actions to create new containers
                 for container in new_container_job_assignment.keys():
                     actions.append(Action(action_type=Action.ACTIVATE_CONTAINER,
                                           jobs=new_container_job_assignment.get(container),
-                                          other_information={Container.JOB_EPOCH:epoch}))
+                                          other_information={Container.JOB_EPOCH:str(epoch)}))
             else:
                 time_until_next_action = min(time_until_next_action, E + delta - cycle_offset)
 
@@ -116,19 +116,19 @@ class UJD1:
         else:
             sorted_epoch_jobs: list[Job] = sorted(epoch_jobs.get(curr_epoch - 1),
                                                   key=lambda x: x.get_receival_time())
-            nk = len(sorted_epoch_jobs)
-            e_minus = 0
+            nk:int = len(sorted_epoch_jobs)
+            e_minus:int = 0
             for job in sorted_epoch_jobs:
                 e_minus += int(job.get_other_info(Job.EXECUTION_TIME_LOWER_BOUND))
-            mk = math.ceil(nk * e_minus / E)
+            mk:int = math.ceil(nk * e_minus / E)
 
             # Determine job assignment for new containers (based on what would occur in real system), can be made more
             # efficient using a priority queue to determine assigned container
             container_job_assignment: typing.Dict[int, list[Job]] = {}
             container_assigned_time: typing.Dict[int, int] = {}
             for job in sorted_epoch_jobs:
-                best_container = -1
-                best_time = delta + E + 1
+                best_container:int = -1
+                best_time:int = delta + E + 1
                 for container in range(mk):
                     if container_assigned_time.get(container) < best_time:
                         best_time = container_assigned_time.get(container)
@@ -143,7 +143,7 @@ class UJD1:
             for new_container in range(mk):
                 actions.append(Action(action_type=Action.ACTIVATE_CONTAINER,
                                       jobs=container_job_assignment.get(new_container),
-                                      other_information={Container.JOB_EPOCH:curr_epoch-1}))
+                                      other_information={Container.JOB_EPOCH:str(curr_epoch-1)}))
 
         actions.append(Action(action_type=Action.WAIT, time=time_until_next_action))
 

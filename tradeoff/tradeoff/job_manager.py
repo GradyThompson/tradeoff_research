@@ -62,7 +62,7 @@ def generate_jobs(job_meta_data_file_name:str, id_prefix:str="")->list[Job]:
             job_id:str = id_prefix + str(id_suffix)
             execution_time:int = execution_times[job_num]
             receival_time:int = receival_times[job_num]
-            jobs.append(Job(id=job_id, execution_time=execution_time, receival_time=receival_time))
+            jobs.append(Job(job_id=job_id, execution_time=execution_time, receival_time=receival_time))
             id_suffix += 1
         
     return jobs
@@ -98,7 +98,7 @@ Args:
     job: the job
 """
 def job_to_string(job:Job)->str:
-    s = str(job.get_id()) + "," + str(job.get_receival_time()) + "," + str(job.get_execution_time())
+    s:str = str(job.get_id()) + "," + str(job.get_receival_time()) + "," + str(job.get_execution_time())
     for other_info_key in job.get_all_other_info():
         s += "," + str(job.get_other_info(other_info_key))
     return s
@@ -114,9 +114,9 @@ def job_from_string(s:str)->Job:
     job_id:str = split_s[0]
     receival_time:int = int(split_s[1])
     execution_time:int = int(split_s[2])
-    job = Job(job_id=job_id, execution_time=execution_time, receival_time=receival_time)
+    job:Job = Job(job_id=job_id, execution_time=execution_time, receival_time=receival_time)
     other_info_str:list[str] = split_s[3:]
-    i = 0
+    i:int = 0
     while i < len(other_info_str):
         job.add_other_info(int(other_info_str[i]), other_info_str[i+1])
         i += 2

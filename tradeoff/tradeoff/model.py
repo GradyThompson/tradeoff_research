@@ -2,6 +2,8 @@ import importlib
 from simulated_system import SimulatedSystem
 from job import Job
 from action import Action
+import typing
+import types
 
 """
 Wrapper for the models
@@ -23,8 +25,8 @@ class Model:
     <module name>,<class name>,<params comma separated>
     """
     def __init__(self, module_name:str, class_name:str, params:list[str]):
-        model_module = importlib.import_module(module_name)
-        model_class = getattr(model_module, class_name)
+        model_module:types.ModuleType = importlib.import_module(module_name)
+        model_class:typing.Any = getattr(model_module, class_name)
         self.model = model_class(params)
 
     """

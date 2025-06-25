@@ -53,8 +53,8 @@ class KJD2:
         while (job_ind < len(sorted_jobs)
                and time + sum([job.get_other_info(Job.EXECUTION_TIME_UPPER_BOUND) for job in sorted_jobs[job_ind:]])
                >= sorted_jobs[job_ind].get_receival_time() + max_delay - delta):
-            curr_job_time = 0
-            assigned_jobs = []
+            curr_job_time:int = 0
+            assigned_jobs:list[Job] = []
             while job_ind < len(sorted_jobs) and delta + curr_job_time <= max_delay:
                 assigned_jobs.append(sorted_jobs[job_ind])
                 curr_job_time += sorted_jobs[job_ind].get_other_info(Job.EXECUTION_TIME_UPPER_BOUND)

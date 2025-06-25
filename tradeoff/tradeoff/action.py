@@ -1,4 +1,7 @@
+import typing
+
 from job import Job
+from container import Container
 
 """
 Class containing action information
@@ -23,18 +26,18 @@ class Action:
     Action constructor
 
     Args:
-        action_type: - type of action
-        container: - container being acted upon
-        jobs: - Jobs being acted upon
+        action_type: type of action
+        container: container being acted upon
+        jobs: Jobs being acted upon
     """
-    def __init__(self, action_type, container=None, jobs=None, time:int=0, other_information=None):
+    def __init__(self, action_type:int, container:Container=None, jobs:list[Job]=None, time:int=0, other_information:typing.Dict[int, str]=None):
         if jobs is None:
-            jobs = []
-        self.action_type = action_type
-        self.container = container
+            jobs:list[Job] = []
+        self.action_type:int = action_type
+        self.container:Container = container
         self.jobs:list[Job] = jobs
         self.time:int = time
-        self.other_information = other_information
+        self.other_information:typing.Dict[int, str] = other_information
 
     """
     Return the type of action being performed
@@ -42,7 +45,7 @@ class Action:
     Returns:
         The action type
     """
-    def get_action_type(self):
+    def get_action_type(self)->int:
         return self.action_type
     
     """
@@ -51,7 +54,7 @@ class Action:
     Returns:
         The container
     """
-    def get_container(self):
+    def get_container(self)->Container:
         return self.container
     
     """
@@ -60,7 +63,7 @@ class Action:
     Returns:
         The list of jobs
     """
-    def get_jobs(self):
+    def get_jobs(self)->list[Job]:
         return self.jobs
 
     """
@@ -70,17 +73,17 @@ class Action:
         The time
     """
 
-    def get_time(self):
+    def get_time(self)->int:
         return self.time
 
     """
     Adds additional information
     """
-    def add_other_information(self, key, value):
+    def add_other_information(self, key:int, value:str):
         self.other_information[key] = value
 
     """
     Returns other information
     """
-    def get_other_information(self, key):
+    def get_other_information(self, key:int)->str:
         return self.other_information.get(key)

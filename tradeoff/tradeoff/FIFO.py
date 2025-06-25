@@ -47,7 +47,7 @@ class FIFO:
             new_container_assigned_time[container] = 0
 
         for job in sorted_jobs:
-            best_existing_container:Container = None
+            best_existing_container:Container = Container(-1)
             best_existing_time:int = -1
 
             for container in existing_containers:

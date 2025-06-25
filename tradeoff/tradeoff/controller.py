@@ -36,7 +36,7 @@ class Controller:
 
         self.system:SimulatedSystem = SimulatedSystem(startup_duration=startup_duration, curr_time=0)
         self.model:Model = Model(module_name=model_module_name, class_name=model_class_name, params=model_params)
-        self.results_file_name = results_file_name
+        self.results_file_name:str = results_file_name
         self.time:int = 0
 
         self.jobs:list[Job] = job_manager.jobs_from_file(input_jobs_file_name)
@@ -46,9 +46,6 @@ class Controller:
 
     """
     Runs the system until completion
-    
-    Args:
-        results_file_name: where the results of the system are stored
         
     Returns:
         The name of the file with the results
@@ -56,7 +53,6 @@ class Controller:
     def control_loop(self)->str:
         wait_time:int = -1
         while len(self.queued_jobs) > 0:
-            #Prepare next set of batches and update system
             next_time:int = self.queued_jobs[0].get_receival_time()
             if wait_time != -1:
                 next_time = min(next_time, wait_time)

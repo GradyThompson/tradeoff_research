@@ -30,7 +30,7 @@ class SimulatedSystem:
     """
     def perform_actions(self, actions:list[Action]):
         for action in actions:
-            action_type = action.get_action_type()
+            action_type:int = action.get_action_type()
             if action_type == Action.ACTIVATE_CONTAINER:
                 self.activate_container(initial_jobs=action.get_jobs())
             elif action_type == Action.TERMINATE_CONTAINER:

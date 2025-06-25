@@ -14,18 +14,18 @@ class Container:
         curr_time: the time at the creation of the container
         other_information: additional information that might be needed
     """
-    def __init__(self, curr_time:int, initial_jobs:list[Job] = None, other_information:typing.Dict=None):
+    def __init__(self, curr_time:int, initial_jobs:list[Job] = None, other_information:typing.Dict[int, str]=None):
         if initial_jobs is None:
-            self.jobs:list = []
+            self.jobs:list[Job] = []
         else:
-            self.jobs:list = initial_jobs
+            self.jobs:list[Job] = initial_jobs
         self.curr_time:int = curr_time
         self.start_time:int = curr_time
         self.job_progress:int = 0
         if other_information is None:
-            self.other_information = {}
+            self.other_information:typing.Dict[int, str] = {}
         else:
-            self.other_information:typing.Dict = other_information
+            self.other_information:typing.Dict[int, str] = other_information
 
     """
     Add a job to the container's job queue
@@ -72,10 +72,8 @@ class Container:
             finished_job.complete(self.curr_time)
             self.job_progress = 0
 
-        #Update job progress of unfinished job
         if len(self.jobs) >= 1:
             self.job_progress = time - self.curr_time
-
         self.curr_time = time
 
     """
@@ -84,7 +82,7 @@ class Container:
     Returns:
         The time until completion
     """
-    def time_until_done(self):
+    def time_until_done(self)->int:
         time_until_done:int = 0
         for job in self.jobs:
             time_until_done += job.get_execution_time()
@@ -101,10 +99,10 @@ class Container:
     Returns:
         The time until completion under the different metric
     """
-    def time_until_done_other(self, other_metric:str):
+    def time_until_done_other(self, other_metric:int):
         time_until_done:int = 0
         for job in self.jobs:
-            time_until_done += job.get_other_info(other_metric)
+            time_until_done += int(job.get_other_info(other_metric))
         time_until_done -= self.job_progress
         return time_until_done
 
@@ -120,7 +118,7 @@ class Container:
     Returns:
         True if computation is done and false otherwise
     """
-    def is_done(self):
+    def is_done(self)->bool:
         return self.time_until_done() == 0
 
     """
@@ -129,7 +127,7 @@ class Container:
     Returns:
         The time the container has been alive
     """
-    def get_time_alive(self):
+    def get_time_alive(self)->int:
         return self.curr_time - self.start_time
 
     """
@@ -139,7 +137,7 @@ class Container:
         key: the key of the other information
         value: the value of the other information
     """
-    def add_other_information(self, key, value):
+    def add_other_information(self, key:int, value:str):
         self.other_information[key] = value
 
     """
@@ -151,5 +149,5 @@ class Container:
     Returns:
         The value of the other information
     """
-    def get_other_information(self, key):
+    def get_other_information(self, key:int)->str:
         return self.other_information.get(key)

@@ -29,8 +29,8 @@ class Job:
     Adds additional info to the job
 
     Args:
-        key - the key the additional info can be accessed by
-        value - the value stored
+        key: the key the additional info can be accessed by
+        value: the value stored
     """
     def add_other_info(self, key:int, value:str):
         self.other_info[key] = value
