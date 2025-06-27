@@ -21,6 +21,7 @@ class SimulatedSystem:
         self.time:int = curr_time
         self.startup_time:int = startup_duration
         self.accrued_cost:int = 0
+        self.assigned_jobs:set[Job] = set()
 
     """
     Performs the provided actions on the system
@@ -64,6 +65,7 @@ class SimulatedSystem:
     Adds a new container to the system
     """
     def activate_container(self, initial_jobs:list[Job]):
+        self.assigned_jobs.update(initial_jobs)
         self.containers.add(Container(curr_time=self.time, startup_time=self.startup_time, initial_jobs=initial_jobs))
 
     """
@@ -84,6 +86,7 @@ class SimulatedSystem:
         container: the container being added to
     """
     def assign_jobs(self, jobs:list[Job], container:Container):
+        self.assigned_jobs.update(jobs)
         for job in jobs:
             container.add_job(job)
 
@@ -107,6 +110,12 @@ class SimulatedSystem:
     """
     def reorder_jobs(self, new_job_order:list[Job], container:Container):
         container.new_job_order(new_job_order)
+
+    """
+    Returns the jobs that have been assigned to containers in the system
+    """
+    def get_assigned_jobs(self):
+        return self.assigned_jobs
 
     """
     Run the system until the provided time

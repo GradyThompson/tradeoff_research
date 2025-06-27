@@ -66,9 +66,6 @@ class KJD1:
         if time_until_next_action != -1:
             actions.append(Action(action_type=Action.WAIT, time=time+time_until_next_action))
 
-        for action in actions:
-            print(action.get_action_type(), action.get_jobs())
-
         return actions
 
 """
