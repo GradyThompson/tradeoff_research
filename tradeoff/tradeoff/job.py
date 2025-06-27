@@ -110,7 +110,7 @@ class Job:
     def get_queue_time(self):
         if self.completion_time == -1:
             return -1
-        return self.completion_time - self.receival_time
+        return self.completion_time - self.execution_time - self.receival_time
 
     """
     Define less than to be based on receival time, making jobs sorted by receival time

@@ -1,7 +1,9 @@
-import tradeoff.simulated_system as sim_sys
-from tradeoff.container import Container
+import typing
+from simulated_system import SimulatedSystem
 from job import Job
-from tradeoff.action import Action
+from action import Action
+from container import Container
+
 
 """
 Unknown job duration algorithm 2
@@ -14,7 +16,7 @@ class UJD2:
         params a list of parameters (length 1) 1. epsilon
     """
     def __init__(self, params: list):
-        self.epsilon = params[0]
+        self.epsilon:float = float(params[0])
 
     """
     Decides system actions based on the deterministic execution time of jobs
@@ -27,7 +29,7 @@ class UJD2:
         returns list of actions to perform
     """
 
-    def determine_actions(self, system:sim_sys.SimulatedSystem, pending_jobs:list[Job])->list[Action]:
+    def determine_actions(self, system:SimulatedSystem, pending_jobs:list[Job])->list[Action]:
         actions:list[Action] = []
 
         delta: int = system.get_startup_time()
@@ -63,4 +65,34 @@ class UJD2:
             if len(assigned_jobs) > 0:
                 actions.append(Action(action_type=Action.ACTIVATE_CONTAINER, jobs=assigned_jobs))
 
+        time_until_next_action:int = time_until_container_shutdown(system=system, actions=actions)
+
+        if time_until_next_action != -1:
+            actions.append(Action(action_type=Action.WAIT, time=time+time_until_next_action))
+
         return actions
+
+
+def time_until_container_shutdown(system: SimulatedSystem, actions: list[Action]) -> int:
+    next_time: int = -1
+    existing_container_time_to_complete: typing.Dict[Container, int] = {}
+    for container in system.get_containers():
+        existing_container_time_to_complete[container] = container.time_until_done()
+
+    for action in actions:
+        if action.get_action_type() == Action.ACTIVATE_CONTAINER:
+            new_time_to_complete = system.get_startup_time() + sum(
+                [job.get_execution_time() for job in action.get_jobs()])
+            if new_time_to_complete < next_time or next_time == -1:
+                next_time = new_time_to_complete
+
+        if action.get_action_type() == Action.ADD_JOBS:
+            existing_container_time_to_complete[action.get_container()] += sum(
+                [job.get_execution_time() for job in action.get_jobs()])
+
+    if len(existing_container_time_to_complete.values()) > 0:
+        existing_next_time = min(existing_container_time_to_complete.values())
+        if existing_next_time < next_time or next_time == -1:
+            next_time = existing_next_time
+
+    return next_time

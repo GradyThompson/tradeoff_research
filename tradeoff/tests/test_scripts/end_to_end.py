@@ -1,6 +1,5 @@
 import typing
-
-from tradeoff.controller import Controller
+from controller import Controller
 
 """
 Performs an end to end test of a model
@@ -19,17 +18,17 @@ def end_to_end_model_test(config_file_name:str, expected_file_name:str):
         expected_job_queue_times:typing.Dict[int, int] = {}
         expected_cost:int = 0
 
-        for line_num, line in enumerate(results_file):
+        for line_num, line in enumerate(results_file.readlines()):
             if line_num == 0:
-                cost = int(line)
+                cost = int(line[5:])
             else:
                 formated_line:list[str] = line.split(",")
                 job = int(formated_line[0])
                 job_queue_times[job] = int(formated_line[1])
 
-        for line_num, line in enumerate(expected_file):
+        for line_num, line in enumerate(expected_file.readlines()):
             if line_num == 0:
-                expected_cost = int(line)
+                expected_cost = int(line[5:])
             else:
                 formated_line = line.split(",")
                 job = int(formated_line[0])

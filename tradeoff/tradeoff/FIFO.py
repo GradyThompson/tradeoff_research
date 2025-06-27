@@ -6,6 +6,8 @@ import typing
 
 """
 FIFO algorithm
+
+Activates new containers up to the specified maximum and does not shutdown containers
 """
 class FIFO:
     """
@@ -47,13 +49,13 @@ class FIFO:
             new_container_assigned_time[container] = 0
 
         for job in sorted_jobs:
-            best_existing_container:Container = Container(-1)
+            best_existing_container:Container = Container(-1, -1)
             best_existing_time:int = -1
 
             for container in existing_containers:
                 if (best_existing_time == -1 or
                         container.time_until_done() + existing_container_assigned_time.get(container) < best_existing_time):
-                    best_existing_time = existing_container_assigned_time.get(container)
+                    best_existing_time = container.time_until_done() + existing_container_assigned_time.get(container)
                     best_existing_container = container
 
             best_new_container:int = -1

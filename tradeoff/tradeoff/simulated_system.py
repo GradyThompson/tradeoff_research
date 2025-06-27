@@ -18,8 +18,8 @@ class SimulatedSystem:
     """
     def __init__(self, startup_duration:int, curr_time:int = 0):
         self.containers:set[Container] = set()
-        self.time:int = startup_duration
-        self.startup_time:int = curr_time
+        self.time:int = curr_time
+        self.startup_time:int = startup_duration
         self.accrued_cost:int = 0
 
     """
@@ -64,7 +64,7 @@ class SimulatedSystem:
     Adds a new container to the system
     """
     def activate_container(self, initial_jobs:list[Job]):
-        self.containers.add(Container(curr_time=self.time, initial_jobs=initial_jobs))
+        self.containers.add(Container(curr_time=self.time, startup_time=self.startup_time, initial_jobs=initial_jobs))
 
     """
     Removes a container from the system
@@ -149,13 +149,16 @@ class SimulatedSystem:
         self.accrued_cost = 0
 
     """
-    Completes all jobs in the system and closes all containers
+    Gets the time until all containers are finished all work
+    
+    Returns:
+        The time until all container are done
     """
-    def finish(self):
-        existing_containers = set(self.containers)
-        for container in existing_containers:
-            container.finish()
-            self.terminate_container(container=container)
+    def get_time_until_done(self)->int:
+        max_time:int = 0
+        for container in self.containers:
+            max_time = max(max_time, container.time_until_done())
+        return max_time
 
     """
     Checks if all work is completed

@@ -84,3 +84,7 @@ def end_to_end_tests():
     kjd2_test_1()
     ujd1_test_1()
     ujd2_test_1()
+
+fifo_test_1()
+#kjd1_test_1()
+#end_to_end_tests()

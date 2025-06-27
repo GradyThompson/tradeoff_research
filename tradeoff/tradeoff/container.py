@@ -12,16 +12,17 @@ class Container:
 
     Args:
         curr_time: the time at the creation of the container
+        startup_time: time required for the container to startup
         other_information: additional information that might be needed
     """
-    def __init__(self, curr_time:int, initial_jobs:list[Job] = None, other_information:typing.Dict[int, str]=None):
+    def __init__(self, curr_time:int, startup_time:int, initial_jobs:list[Job] = None, other_information:typing.Dict[int, str]=None):
         if initial_jobs is None:
             self.jobs:list[Job] = []
         else:
             self.jobs:list[Job] = initial_jobs
         self.curr_time:int = curr_time
         self.start_time:int = curr_time
-        self.job_progress:int = 0
+        self.job_progress:int = -startup_time
         if other_information is None:
             self.other_information:typing.Dict[int, str] = {}
         else:
@@ -73,7 +74,7 @@ class Container:
             self.job_progress = 0
 
         if len(self.jobs) >= 1:
-            self.job_progress = time - self.curr_time
+            self.job_progress += time - self.curr_time
         self.curr_time = time
 
     """

@@ -52,10 +52,13 @@ class Controller:
     """
     def control_loop(self)->str:
         wait_time:int = -1
-        while len(self.queued_jobs) > 0:
-            next_time:int = self.queued_jobs[0].get_receival_time()
-            if wait_time != -1:
-                next_time = min(next_time, wait_time)
+        while len(self.queued_jobs) > 0 or wait_time != -1:
+            if wait_time == -1:
+                next_time = self.queued_jobs[0].get_receival_time()
+            elif len(self.queued_jobs) == 0:
+                next_time = wait_time
+            else:
+                next_time = min(self.queued_jobs[0].get_receival_time(), wait_time)
             wait_time = -1
             new_jobs:list[Job] = []
             while len(self.queued_jobs) > 0 and self.queued_jobs[0].get_receival_time() <= next_time:
@@ -69,6 +72,7 @@ class Controller:
                     wait_time = action.get_time()
             self.system.perform_actions(actions=actions)
             self.time = next_time
-        self.system.finish()
+        time_until_done:int = self.system.get_time_until_done()
+        self.system.run(self.time + time_until_done)
         result_manager.save_system_performance(self.system, self.jobs, self.results_file_name)
         return self.results_file_name

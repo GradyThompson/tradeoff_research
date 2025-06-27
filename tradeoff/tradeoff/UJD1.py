@@ -1,9 +1,10 @@
-import tradeoff.simulated_system as sim_sys
-from job import Job
-from tradeoff.action import Action
-import math
 import typing
-from tradeoff.container import Container
+import math
+from simulated_system import SimulatedSystem
+from job import Job
+from action import Action
+from container import Container
+
 
 """
 Unknown job duration algorithm 1
@@ -16,7 +17,7 @@ class UJD1:
         params a list of parameters (length 1) 1. epsilon
     """
     def __init__(self, params: list):
-        self.epsilon:float = params[0]
+        self.epsilon:float = float(params[0])
 
     """
     Decides system actions based on the deterministic execution time of tasks
@@ -26,7 +27,7 @@ class UJD1:
         pending_jobs: a list of pending jobs
     """
 
-    def determine_actions(self, system:sim_sys.SimulatedSystem, pending_jobs:list[Job])->list:
+    def determine_actions(self, system:SimulatedSystem, pending_jobs:list[Job])->list:
         actions:list = []
 
         delta:int = system.get_startup_time()
@@ -145,6 +146,12 @@ class UJD1:
                                       jobs=container_job_assignment.get(new_container),
                                       other_information={Container.JOB_EPOCH:str(curr_epoch-1)}))
 
-        actions.append(Action(action_type=Action.WAIT, time=time_until_next_action))
+        for container in system.get_containers():
+            if container.get_time_alive() <= time:
+                actions.append(Action(action_type=Action.TERMINATE_CONTAINER, container=container))
+            else:
+                time_until_next_action = min(time_until_next_action, container.time_until_done())
+
+        actions.append(Action(action_type=Action.WAIT, time=time+time_until_next_action))
 
         return actions
