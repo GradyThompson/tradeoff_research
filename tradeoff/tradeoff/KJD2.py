@@ -1,8 +1,8 @@
-import typing
 from simulated_system import SimulatedSystem
 from job import Job
 from action import Action
 from container import Container
+import scheduler_util
 
 
 """
@@ -43,7 +43,7 @@ class KJD2:
             assigned_jobs:list[Job] = []
             curr_container_time:int = container.time_until_done()
             while (job_ind < len(sorted_jobs)
-                   and curr_container_time + time - sorted_jobs[job_ind].get_execution_time() <= max_delay):
+                   and curr_container_time + time - sorted_jobs[job_ind].get_receival_time() <= max_delay):
                 curr_container_time += sorted_jobs[job_ind].get_execution_time()
                 assigned_jobs.append(sorted_jobs[job_ind])
                 job_ind += 1
@@ -64,34 +64,9 @@ class KJD2:
             if len(assigned_jobs) > 0:
                 actions.append(Action(action_type=Action.ACTIVATE_CONTAINER, jobs=assigned_jobs))
 
-        time_until_next_action:int = time_until_container_shutdown(system=system, actions=actions)
+        time_until_next_action:int = scheduler_util.terminate_stale_containers(system=system, actions=actions)
 
         if time_until_next_action != -1:
             actions.append(Action(action_type=Action.WAIT, time=time+time_until_next_action))
 
         return actions
-
-
-def time_until_container_shutdown(system: SimulatedSystem, actions: list[Action]) -> int:
-    next_time: int = -1
-    existing_container_time_to_complete: typing.Dict[Container, int] = {}
-    for container in system.get_containers():
-        existing_container_time_to_complete[container] = container.time_until_done()
-
-    for action in actions:
-        if action.get_action_type() == Action.ACTIVATE_CONTAINER:
-            new_time_to_complete = system.get_startup_time() + sum(
-                [job.get_execution_time() for job in action.get_jobs()])
-            if new_time_to_complete < next_time or next_time == -1:
-                next_time = new_time_to_complete
-
-        if action.get_action_type() == Action.ADD_JOBS:
-            existing_container_time_to_complete[action.get_container()] += sum(
-                [job.get_execution_time() for job in action.get_jobs()])
-
-    if len(existing_container_time_to_complete.values()) > 0:
-        existing_next_time = min(existing_container_time_to_complete.values())
-        if existing_next_time < next_time or next_time == -1:
-            next_time = existing_next_time
-
-    return next_time
