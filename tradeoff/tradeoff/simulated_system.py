@@ -1,3 +1,5 @@
+import typing
+
 from container import Container
 from job import Job
 from action import Action
@@ -33,7 +35,7 @@ class SimulatedSystem:
         for action in actions:
             action_type:int = action.get_action_type()
             if action_type == Action.ACTIVATE_CONTAINER:
-                self.activate_container(initial_jobs=action.get_jobs())
+                self.activate_container(initial_jobs=action.get_jobs(), other_information=action.get_all_other_information())
             elif action_type == Action.TERMINATE_CONTAINER:
                 self.terminate_container(action.get_container())
             elif action_type == Action.ADD_JOBS:
@@ -64,9 +66,11 @@ class SimulatedSystem:
     """
     Adds a new container to the system
     """
-    def activate_container(self, initial_jobs:list[Job]):
+    def activate_container(self, initial_jobs:list[Job], other_information:typing.Dict[int, str]=None):
         self.assigned_jobs.update(initial_jobs)
-        self.containers.add(Container(curr_time=self.time, startup_time=self.startup_time, initial_jobs=initial_jobs))
+        if other_information is None:
+            other_information:typing.Dict[int, str] = {}
+        self.containers.add(Container(curr_time=self.time, startup_time=self.startup_time, initial_jobs=initial_jobs, other_information=other_information))
 
     """
     Removes a container from the system

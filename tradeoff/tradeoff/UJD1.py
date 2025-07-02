@@ -4,7 +4,7 @@ from simulated_system import SimulatedSystem
 from job import Job
 from action import Action
 from container import Container
-
+import scheduler_util
 
 """
 Unknown job duration algorithm 1
@@ -44,7 +44,7 @@ class UJD1:
             epoch_jobs[job_epoch].append(job)
 
         #Tracks the time until the next decision needs to be made
-        time_until_next_action:int = E
+        time_until_next_action:int = -1
 
         #Create mapping of epochs in containers
         epoch_containers:typing.Dict[int, set[Container]] = {}
@@ -100,8 +100,7 @@ class UJD1:
                 for container in existing_container_job_assignment.keys():
                     actions.append(Action(action_type=Action.ADD_JOBS,
                                           container=container,
-                                          jobs=existing_container_job_assignment.get(container),
-                                          other_information={Container.JOB_EPOCH:str(epoch)}))
+                                          jobs=existing_container_job_assignment.get(container)))
 
                 #Actions to create new containers
                 for container in new_container_job_assignment.keys():
@@ -109,12 +108,19 @@ class UJD1:
                                           jobs=new_container_job_assignment.get(container),
                                           other_information={Container.JOB_EPOCH:str(epoch)}))
             else:
-                time_until_next_action = min(time_until_next_action, E + delta - cycle_offset)
+                if time_until_next_action != -1:
+                    time_until_next_action = min([time_until_next_action, E + delta - cycle_offset])
+                else:
+                    time_until_next_action = E + delta - cycle_offset
+
 
         #Check if a new epoch has completed
         if time % E != 0:
-            time_until_next_action = min(time_until_next_action, E - time % E)
-        else:
+            if time_until_next_action != -1:
+                time_until_next_action = min([time_until_next_action, E - time % E])
+            else:
+                time_until_next_action = E - time % E
+        elif curr_epoch >= 1:
             sorted_epoch_jobs: list[Job] = sorted(epoch_jobs.get(curr_epoch - 1),
                                                   key=lambda x: x.get_receival_time())
             nk:int = len(sorted_epoch_jobs)
@@ -127,6 +133,10 @@ class UJD1:
             # efficient using a priority queue to determine assigned container
             container_job_assignment: typing.Dict[int, list[Job]] = {}
             container_assigned_time: typing.Dict[int, int] = {}
+            for container in range(mk):
+                container_job_assignment[container] = []
+                container_assigned_time[container] = 0
+
             for job in sorted_epoch_jobs:
                 best_container:int = -1
                 best_time:int = delta + E + 1
@@ -142,16 +152,18 @@ class UJD1:
 
             # Create new containers
             for new_container in range(mk):
-                actions.append(Action(action_type=Action.ACTIVATE_CONTAINER,
-                                      jobs=container_job_assignment.get(new_container),
-                                      other_information={Container.JOB_EPOCH:str(curr_epoch-1)}))
+                if len(container_job_assignment.get(new_container)) >= 1:
+                    actions.append(Action(action_type=Action.ACTIVATE_CONTAINER,
+                                        jobs=container_job_assignment.get(new_container),
+                                        other_information={Container.JOB_EPOCH:str(curr_epoch-1)}))
 
-        for container in system.get_containers():
-            if container.get_time_alive() <= time:
-                actions.append(Action(action_type=Action.TERMINATE_CONTAINER, container=container))
-            else:
-                time_until_next_action = min(time_until_next_action, container.time_until_done())
+        time_until_next_terminate:int = scheduler_util.terminate_stale_containers(system=system, actions=actions)
+        if time_until_next_action == -1:
+            time_until_next_action = time_until_next_terminate
+        elif time_until_next_terminate != -1:
+            time_until_next_action = min(time_until_next_action, time_until_next_terminate)
 
-        actions.append(Action(action_type=Action.WAIT, time=time+time_until_next_action))
+        if time_until_next_action != -1:
+            actions.append(Action(action_type=Action.WAIT, time=time+time_until_next_action))
 
         return actions

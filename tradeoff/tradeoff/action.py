@@ -31,12 +31,14 @@ class Action:
         jobs: Jobs being acted upon
     """
     def __init__(self, action_type:int, container:Container=None, jobs:list[Job]=None, time:int=0, other_information:typing.Dict[int, str]=None):
-        if jobs is None:
-            jobs:list[Job] = []
         self.action_type:int = action_type
         self.container:Container = container
-        self.jobs:list[Job] = jobs
         self.time:int = time
+        if jobs is None:
+            jobs:list[Job] = []
+        self.jobs:list[Job] = jobs
+        if other_information is None:
+            other_information:typing.Dict[int, str] = {}
         self.other_information:typing.Dict[int, str] = other_information
 
     """
@@ -78,12 +80,31 @@ class Action:
 
     """
     Adds additional information
+    
+    Args:
+        key: the key of the information
+        value: the information
     """
     def add_other_information(self, key:int, value:str):
         self.other_information[key] = value
 
     """
     Returns other information
+    
+    Args:
+        key: the key of the information
+        
+    Returns:
+        The information associated with the key
     """
     def get_other_information(self, key:int)->str:
         return self.other_information.get(key)
+
+    """
+    Returns all other information
+    
+    Returns:
+        The other information table
+    """
+    def get_all_other_information(self):
+        return self.other_information
