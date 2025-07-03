@@ -10,6 +10,7 @@ python = "^3.11"
 scipy = "^1.15.3"
 numpy = "^2.2.6"
 argparse = "^1.4.0"
+stable-baselines3 = "^2.6.0"
 
 
 [build-system]
