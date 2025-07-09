@@ -26,30 +26,44 @@
   -Determines which containers are kept alive at any time
   -Event - command to system is made
 
-#Models
+# Models
+## RL
+### Parameters
 
--RL Model
-  -Parameters
-    -Jobs
-      -Number of pending jobs
-      -Job deadline percentiles (DP0, DP10, DP20, ..., DP90, DP100)
-        -Deadline
-        -Volume up to this point (total volume of jobs with an earlier deadline)
-    -Containers
-      -Start up time
-      -Number of alive containers
-      -Container volume percentiles (VP0, VP25, VP50, VP75, VP100)
-    -Additional profiling information (not included in current iteration)
-      -Expected volume
-      -Next job arrival time
-  -Output
-    -Create new container
-      -Above 0 is create a container
-  -Rewards/Penalties
-    -Deadline miss - hyperparameter
-    -Container cost - hyperparameter
-  -Architecture
-    -Single neural network
-  -Misc
-    -Jobs are assigned to container via EDF
-    -Containers are shutdown when they run out of work
+Parameters inputted into the RL model, which are generated from the system.
+
+#### Legend
+
+- U - upper bound
+- L - lower bound
+- UL - both upper and lower bound
+
+#### List
+
+- Number of containers
+- Number of queued jobs
+- UL next container completion time
+- UL average container volume
+- UL last container completion time
+- earliest queued job receival time
+- average queued job receival time
+- latest queued job receival time
+- UL queued job volume
+- UL minimum queued job duration
+- UL maximum queued job duration
+- UL earliest queued job duration
+- new container startup time
+
+### Output
+
+The number of containers to be kept activated. 
+If the number of container exceeds the current amount, new containers are activated,
+if the number of containers is less than the current amount, 
+containers are shutdown when they complete their current job, until the target number is reached.
+
+### Reward
+
+The reward follows the following function (R is a hyperparameter):
+
+Reward = -#containers-R(Maximum delay of currently assigned jobs
+)

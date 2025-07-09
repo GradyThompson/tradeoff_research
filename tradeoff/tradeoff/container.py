@@ -61,6 +61,15 @@ class Container:
         self.jobs = list(new_job_order)
 
     """
+    Returns the jobs assigned to the container
+    
+    Returns:
+        The job set
+    """
+    def get_jobs(self)->list[Job]:
+        return self.jobs
+
+    """
     Run the container/machine until the provided time
 
     Args
@@ -89,6 +98,24 @@ class Container:
             time_until_done += job.get_execution_time()
         time_until_done -= self.job_progress
         return time_until_done
+
+    """
+    Gets the estimated time when a job will be run
+    
+    Args:
+        job: the job
+        
+    Returns:
+        The time when the job will be run, under current conditions
+    """
+    def time_when_job_run(self, job:Job)->int:
+        run_time:int = self.curr_time
+        run_time -= self.job_progress
+        for job in self.jobs:
+            if job == job:
+                break
+            run_time += job.get_execution_time()
+        return run_time
 
     """
     Returns the time until done given a different information model
