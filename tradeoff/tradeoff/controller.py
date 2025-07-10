@@ -5,6 +5,7 @@ import job_manager
 from action import Action
 import result_manager
 import typing
+import heapq
 
 """
 Controls a state-based simulated system of jobs and machines
@@ -14,21 +15,57 @@ class Controller:
     Initializes controller
 
     Args:
-        system: the system being run upon
-        model: the scheduling model being used
-        jobs: the jobs to be run in the system
-        results_file_name: name of the file the results will be stored in
+        config_file_name: name of file with config information
+        no_model: if true than the model is setup, if false, controller is setup with the provided model
+
+    Config file:
+        <input_jobs_file_name>
+        <results_file_name>
+        <model_module_name>,<model_class_name>,<model params (comma separated)>
+        <startup_time>
     """
-    def __init__(self, system:SimulatedSystem, model:Model, jobs:list[Job], results_file_name:str):
+    def __init__(self, config_file_name:str, no_model:bool=False):
+        with open(config_file_name) as config_file:
+            file_lines: list[str] = [line.strip() for line in config_file.readlines()]
+            input_jobs_file_name: str = file_lines[0]
+            results_file_name: str = file_lines[1]
+            if no_model:
+                startup_duration: int = int(file_lines[2])
+            else:
+                model_info: list[str] = file_lines[2].split(",")
+                startup_duration: int = int(file_lines[3])
+
+                model_module_name: str = model_info[0]
+                model_class_name: str = model_info[1]
+                model_params: list[str] = model_info[2:]
+
+        if not no_model:
+            model = Model(module_name=model_module_name, class_name=model_class_name, params=model_params)
+            self.model:Model = model
+
+        system: SimulatedSystem = SimulatedSystem(startup_duration=startup_duration, curr_time=0)
+        jobs: list[Job] = sorted(job_manager.jobs_from_file(input_jobs_file_name))
+
         self.system:SimulatedSystem = system
-        self.model:Model = model
         self.results_file_name:str = results_file_name
         self.time:int = 0
         self.wait_time:int = -1
 
         self.jobs:list[Job] = jobs
+        heapq.heapify(self.jobs)
+
         self.job_ind:int = 0
         self.queued_jobs: list[Job] = []
+
+    """
+    Adds jobs to the system
+    
+    Args:
+        jobs: the jobs to add
+    """
+    def add_jobs(self, jobs:list[Job]):
+        for job in jobs:
+            heapq.heappush(self.jobs, job)
 
     """
     Returns the system
@@ -45,9 +82,17 @@ class Controller:
     Returns:
         The queued jobs
     """
-
-    def get_queued_jobs(self):
+    def get_queued_jobs(self)->list[Job]:
         return self.queued_jobs
+
+    """
+    Returns the time
+    
+    Returns:
+        The time
+    """
+    def get_time(self)->int:
+        return self.time
 
     """
     Moves the controller to the next step, continues until the earlier of the wait time and the next job release time
@@ -59,6 +104,8 @@ class Controller:
         The simulated system and queued jobs
     """
     def next_step(self, actions:list[Action] = None)->typing.Tuple[SimulatedSystem, list[Job]]:
+        if not hasattr(self, "model") and actions is None:
+            raise ValueError("No model nor action")
         if self.wait_time == -1:
             next_time = self.jobs[self.job_ind].get_receival_time()
         elif self.job_ind == len(self.jobs):
@@ -116,46 +163,11 @@ class Controller:
         The name of the file with the results
     """
     def control_loop(self)->str:
+        if not hasattr(self, "model"):
+            raise ValueError("No model")
         while self.job_ind < len(self.jobs) or self.wait_time != -1:
             self.next_step()
         time_until_done:int = self.system.get_time_until_done()
         self.system.run(self.time + time_until_done)
         result_manager.save_system_performance(self.system, self.jobs, self.results_file_name)
         return self.results_file_name
-
-    """
-    Parses a config file
-
-    Args:
-        config_file_name: name of file with config information
-
-    Config file:
-        <input_jobs_file_name>
-        <results_file_name>
-        <model_module_name>,<model_class_name>,<model params (comma separated)>
-        <startup_time>
-
-    Returns:
-        The system
-        The scheduling model
-        The list of jobs to be run on the system
-        The name of the file the results should be stored in
-    """
-    @staticmethod
-    def parse_config(config_file_name: str) -> typing.Tuple[SimulatedSystem, Model, list[Job], str]:
-        with open(config_file_name) as config_file:
-            file_lines: list[str] = [line.strip() for line in config_file.readlines()]
-            input_jobs_file_name: str = file_lines[0]
-            results_file_name: str = file_lines[1]
-            model_info: list[str] = file_lines[2].split(",")
-            startup_duration: int = int(file_lines[3])
-
-            model_module_name: str = model_info[0]
-            model_class_name: str = model_info[1]
-            model_params: list[str] = model_info[2:]
-
-        system: SimulatedSystem = SimulatedSystem(startup_duration=startup_duration, curr_time=0)
-        model: Model = Model(module_name=model_module_name, class_name=model_class_name, params=model_params)
-        jobs: list[Job] = sorted(job_manager.jobs_from_file(input_jobs_file_name))
-
-        return system, model, jobs, results_file_name

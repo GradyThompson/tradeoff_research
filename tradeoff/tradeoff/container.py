@@ -76,6 +76,11 @@ class Container:
         time: the time to run the container until
     """
     def run(self, time:int):
+        if self.job_progress < 0:
+            delta:int = min(-self.job_progress, time-self.curr_time)
+            self.curr_time += delta
+            self.job_progress += delta
+
         while len(self.jobs) > 0 and self.curr_time + self.jobs[0].get_execution_time() - self.job_progress <= time:
             finished_job:Job = self.jobs.pop(0)
             self.curr_time += finished_job.get_execution_time() - self.job_progress

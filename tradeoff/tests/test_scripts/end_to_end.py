@@ -12,8 +12,7 @@ Args:
     expected_file_name: the name of the file containing the expected output
 """
 def end_to_end_model_test(config_file_name:str, expected_file_name:str):
-    system, model, jobs, result_file_name = Controller.parse_config(config_file_name=config_file_name)
-    controller:Controller = Controller(system=system, model=model, jobs=jobs, results_file_name=result_file_name)
+    controller:Controller = Controller(config_file_name=config_file_name)
     results_file_name:str = controller.control_loop()
 
     with open(results_file_name, 'r') as results_file, open(expected_file_name, 'r') as expected_file:

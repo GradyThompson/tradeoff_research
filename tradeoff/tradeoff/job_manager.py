@@ -100,6 +100,7 @@ Args:
 def job_to_string(job:Job)->str:
     s:str = str(job.get_id()) + "," + str(job.get_receival_time()) + "," + str(job.get_execution_time())
     for other_info_key in job.get_all_other_info():
+        s += "," + str(other_info_key)
         s += "," + str(job.get_other_info(other_info_key))
     return s
     
