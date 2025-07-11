@@ -1,12 +1,9 @@
-import typing
-
 from simulated_system import SimulatedSystem
 from job import Job
 from action import Action
-import numpy as np
-import gymnasium as gym
 from stable_baselines3 import PPO
-from stable_baselines3.common.env_util import make_vec_env
+from env_RL_wrapper import SystemWrapper
+import numpy as np
 
 """
 RL Algorithm
@@ -36,5 +33,9 @@ class RL:
     """
 
     def determine_actions(self, system: SimulatedSystem, pending_jobs: list[Job]) -> list[Action]:
-        actions:list[Action] = []
+        obs:np.ndarray = SystemWrapper.generate_observation(jobs=pending_jobs, system=system)
+        action, _ = self.model.predict(observation=obs, deterministic=True)
+        target_num_containers:int = int(action)
+        actions:list[Action] = SystemWrapper.determine_actions(jobs=pending_jobs, system=system,
+                                                               target_num_containers=target_num_containers)
         return actions

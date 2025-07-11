@@ -18,15 +18,13 @@ class SystemWrapper(Env):
         config_file_name: name of the file containing the system config information
         max_containers: maximum number of containers
     """
-    def __init__(self, config_file_name: str, max_containers: int, reward_ratio: float):
+    def __init__(self, config_file_name: str, max_containers: int):
         super().__init__()
 
         self.action_space:spaces.Discrete = spaces.Discrete(max_containers)
         self.observation_space:spaces.Box = spaces.Box(low=-np.inf, high=np.inf, shape=(20,), dtype=np.float32)
 
         self.controller: Controller = Controller(config_file_name=config_file_name, no_model=True)
-
-        self.reward_ratio:float = reward_ratio
 
     """
     Generates the state for the RL model given the system and queued jobs
@@ -40,13 +38,12 @@ class SystemWrapper(Env):
         
     State (ndarray of floats): see Models/RL/parameters in README
     """
-    def generate_observation(self)->npt.NDArray[np.float32]:
-        jobs:list[Job] = self.controller.get_queued_jobs()
+    @staticmethod
+    def generate_observation(jobs:list[Job], system:SimulatedSystem)->npt.NDArray[np.float32]:
         job_receival_time:list[int] = [job.get_receival_time() for job in jobs]
         upper_job_execution_time:list[int] = [int(job.get_other_info(Job.EXECUTION_TIME_UPPER_BOUND)) for job in jobs]
         lower_job_execution_time: list[int] = [int(job.get_other_info(Job.EXECUTION_TIME_LOWER_BOUND)) for job in jobs]
 
-        system:SimulatedSystem = self.controller.get_system()
         containers:set[Container] = system.get_containers()
         upper_container_completion_times: list[int] = \
             [container.time_until_done_other(Job.EXECUTION_TIME_UPPER_BOUND)
@@ -123,16 +120,15 @@ class SystemWrapper(Env):
         str, typing.Any]]:
         super().reset(seed=seed)
         self.controller.reset()
-        obs = self.generate_observation()
+        obs = self.generate_observation(jobs=self.controller.get_queued_jobs(), system=self.controller.get_system())
         return obs, {}
 
     """
     Generates the reward of the action given the initial state and the next state
     """
-    def get_reward(self)->float:
+    def get_reward(self, start_containers:int, end_containers:int)->float:
         system:SimulatedSystem = self.controller.get_system()
         containers:set[Container] = system.get_containers()
-        container_count:int = len(containers)
         max_job_delay = -1
         for container in containers:
             jobs = container.get_jobs()
@@ -140,10 +136,10 @@ class SystemWrapper(Env):
                 job_queue_time = container.time_when_job_run(job) - job.get_receival_time()
                 if job_queue_time > max_job_delay or max_job_delay == -1:
                     max_job_delay = job_queue_time
+
+        reward: float = start_containers - end_containers
         if max_job_delay != -1:
-            reward:float = -self.reward_ratio * container_count - max_job_delay
-        else:
-            reward:float = -container_count
+            reward += -max_job_delay
         return reward
 
     """
@@ -153,16 +149,18 @@ class SystemWrapper(Env):
         if target > existing, containers are started until the target
     
     Args:
+        jobs: the queued jobs
+        system: the system being analyzed
         target_num_containers: the target number of containers
         
     Returns:
         The list of actions to perform on the system
     """
-    def determine_actions(self, target_num_containers:int)->list[Action]:
+    @staticmethod
+    def determine_actions(jobs:list[Job], system:SimulatedSystem, target_num_containers:int)->list[Action]:
         actions:list[Action] = []
-        jobs:list[Job] = self.controller.get_queued_jobs()
         job_ind:int = 0
-        containers:set[Container] = self.controller.get_system().get_containers()
+        containers:set[Container] = system.get_containers()
         removed_containers:set[Container] = set()
 
         wait_time:int = -1
@@ -183,13 +181,13 @@ class SystemWrapper(Env):
             if container.is_done() and container not in removed_containers:
                 actions.append(Action(action_type=Action.ADD_JOBS, container=container, jobs=[jobs[job_ind]]))
                 if wait_time == -1 or wait_time < jobs[job_ind].get_execution_time():
-                    wait_time = self.controller.get_time() + jobs[job_ind].get_execution_time()
+                    wait_time = system.get_time() + jobs[job_ind].get_execution_time()
                 job_ind += 1
 
         #Activate new containers
         if len(containers) < target_num_containers:
-            if wait_time == -1 or wait_time < self.controller.get_time() + self.controller.get_system().get_startup_time():
-                wait_time = self.controller.get_time() + self.controller.get_system().get_startup_time()
+            if wait_time == -1 or wait_time < system.get_time() + system.get_startup_time():
+                wait_time = system.get_time() + system.get_startup_time()
             for new_container in range(target_num_containers - len(containers)):
                 actions.append(Action(action_type=Action.ACTIVATE_CONTAINER, jobs=[]))
 
@@ -211,10 +209,14 @@ class SystemWrapper(Env):
         Other information associated with the system
     """
     def step(self, action: int) -> typing.Tuple[np.ndarray, float, bool, bool, typing.Dict[str, typing.Any]]:
-        actions:list[Action] = self.determine_actions(action)
+        jobs:list[Job] = self.controller.get_queued_jobs()
+        system:SimulatedSystem = self.controller.get_system()
+        actions:list[Action] = self.determine_actions(jobs=jobs, system=system, target_num_containers=action)
+        start_containers:int = len(system.get_containers())
         self.controller.next_step(actions=actions)
-        obs = self.generate_observation()
-        reward = self.get_reward()
+        end_containers: int = len(system.get_containers())
+        obs = self.generate_observation(jobs=jobs, system=system)
+        reward = self.get_reward(start_containers=start_containers, end_containers=end_containers)
         done = self.controller.is_done()
         return obs, reward, done, False, {}
 
