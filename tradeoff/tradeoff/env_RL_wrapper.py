@@ -9,6 +9,7 @@ from simulated_system import SimulatedSystem
 from job import Job
 from container import Container
 from action import Action
+import heapq
 
 class SystemWrapper(Env):
     """
@@ -17,12 +18,15 @@ class SystemWrapper(Env):
     Args:
         config_file_name: name of the file containing the system config information
         max_containers: maximum number of containers
+        reward_cost_ratio: ratio of cost to speed in reward function (higher cost ratio, is higher incentive to lower cost)
     """
-    def __init__(self, config_file_name: str, max_containers: int):
+    def __init__(self, config_file_name: str, max_containers: int, reward_cost_ratio: float):
         super().__init__()
 
-        self.action_space:spaces.Discrete = spaces.Discrete(max_containers)
+        self.action_space:spaces.Box = spaces.Box(low=0.0, high=max_containers, shape=(1,), dtype=np.float32)
         self.observation_space:spaces.Box = spaces.Box(low=-np.inf, high=np.inf, shape=(20,), dtype=np.float32)
+
+        self.reward_cost_ratio:float = reward_cost_ratio
 
         self.controller: Controller = Controller(config_file_name=config_file_name, no_model=True)
 
@@ -52,56 +56,33 @@ class SystemWrapper(Env):
             [container.time_until_done_other(Job.EXECUTION_TIME_LOWER_BOUND)
              for container in containers]
 
-        obs = np.ndarray([], dtype=np.float32)
-        np.append(obs, len(system.get_containers())) # num containers
-        np.append(obs, len(jobs))  # num queued jobs
+        obs = np.ndarray([20], dtype=np.float32)
+        obs[0] = len(system.get_containers()) # num containers
+        obs[1] = len(jobs)  # num queued jobs
         if len(upper_container_completion_times) > 0:
-            np.append(obs, min(upper_container_completion_times))  # U next container completion time
-            np.append(obs, np.average(upper_container_completion_times))  # U average container completion time
-            np.append(obs, max(upper_container_completion_times))  # U last container completion time
-        else:
-            np.append(obs, 0)
-            np.append(obs, 0)
-            np.append(obs, 0)
+            obs[2] = min(upper_container_completion_times)  # U next container completion time
+            obs[3] = np.average(upper_container_completion_times)  # U average container completion time
+            obs[4] = max(upper_container_completion_times)  # U last container completion time
         if len(lower_container_completion_times) > 0:
-            np.append(obs, min(lower_container_completion_times))  # L next container completion time
-            np.append(obs, np.average(lower_container_completion_times))  # L average container completion time
-            np.append(obs, max(lower_container_completion_times))  # L last container completion time
-        else:
-            np.append(obs, 0)
-            np.append(obs, 0)
-            np.append(obs, 0)
+            obs[5] = min(lower_container_completion_times)  # L next container completion time
+            obs[6] = np.average(lower_container_completion_times)  # L average container completion time
+            obs[7] = max(lower_container_completion_times)  # L last container completion time
         if len(job_receival_time) > 0:
-            np.append(obs, min(job_receival_time))  # earliest queued job receival time
-            np.append(obs, np.average(job_receival_time))  # average queued job receival time
-            np.append(obs, max(job_receival_time))  # latest queued job receival time
-        else:
-            np.append(obs, 0)
-            np.append(obs, 0)
-            np.append(obs, 0)
-        if len(upper_job_execution_time):
-            np.append(obs, sum(upper_job_execution_time))  # U queued job volume
-            np.append(obs, min(upper_job_execution_time))  # U min queued job execution time
-            np.append(obs, max(upper_job_execution_time))  # U max queued job execution time
-        else:
-            np.append(obs, 0)
-            np.append(obs, 0)
-            np.append(obs, 0)
+            obs[8] = min(job_receival_time)  # earliest queued job receival time
+            obs[9] = np.average(job_receival_time)  # average queued job receival time
+            obs[10] = max(job_receival_time)  # latest queued job receival time
+        if len(upper_job_execution_time) > 0:
+            obs[11] = sum(upper_job_execution_time)  # U queued job volume
+            obs[12] = min(upper_job_execution_time)  # U min queued job execution time
+            obs[13] = max(upper_job_execution_time)  # U max queued job execution time
         if len(lower_job_execution_time) > 0:
-            np.append(obs, sum(lower_job_execution_time))  # L queued job volume
-            np.append(obs, min(lower_job_execution_time))  # L min queued job execution time
-            np.append(obs, max(lower_job_execution_time))  # L max queued job execution time
-        else:
-            np.append(obs, 0)
-            np.append(obs, 0)
-            np.append(obs, 0)
+            obs[14] = sum(lower_job_execution_time)  # L queued job volume
+            obs[15] = min(lower_job_execution_time)  # L min queued job execution time
+            obs[16] = max(lower_job_execution_time)  # L max queued job execution time
         if len(jobs) > 0:
-            np.append(obs, int(jobs[0].get_other_info(Job.EXECUTION_TIME_UPPER_BOUND)))  # U earliest queued job execution time
-            np.append(obs, int(jobs[0].get_other_info(Job.EXECUTION_TIME_LOWER_BOUND)))  # L earliest queued job execution time
-        else:
-            np.append(obs, 0)
-            np.append(obs, 0)
-        np.append(obs, system.get_startup_time())  # new container startup time
+            obs[17] = jobs[0].get_other_info(Job.EXECUTION_TIME_UPPER_BOUND) # U earliest queued job execution time
+            obs[18] = jobs[0].get_other_info(Job.EXECUTION_TIME_LOWER_BOUND)  # L earliest queued job execution time
+        obs[19] = system.get_startup_time() # new container startup time
 
         return obs
 
@@ -124,22 +105,44 @@ class SystemWrapper(Env):
         return obs, {}
 
     """
-    Generates the reward of the action given the initial state and the next state
+    Determines when each job would be run if the system is not changed
+    
+    Returns:
+        The list of job queue times
     """
-    def get_reward(self, start_containers:int, end_containers:int)->float:
+    def get_job_queue_times(self)->list[int]:
         system:SimulatedSystem = self.controller.get_system()
         containers:set[Container] = system.get_containers()
-        max_job_delay = -1
+
+        job_queue_times:list[int] = []
+
+        container_times:list[int] = []
+        heapq.heapify(container_times)
         for container in containers:
             jobs = container.get_jobs()
             for job in jobs:
                 job_queue_time = container.time_when_job_run(job) - job.get_receival_time()
-                if job_queue_time > max_job_delay or max_job_delay == -1:
-                    max_job_delay = job_queue_time
+                job_queue_times.append(job_queue_time)
+            heapq.heappush(container_times, container.time_until_done())
 
-        reward: float = start_containers - end_containers
-        if max_job_delay != -1:
-            reward += -max_job_delay
+        for job in self.controller.get_queued_jobs():
+            start_time = heapq.heappop(container_times)
+            end_time = start_time + job.get_execution_time()
+            heapq.heappush(container_times, end_time)
+            job_queue_times.append(start_time)
+
+        return job_queue_times
+
+    """
+    Generates the reward of the action given the initial state and the next state
+    """
+    def get_reward(self, start_containers:int, end_containers:int)->float:
+        curr_job_queue_times: list[int] = self.get_job_queue_times()
+
+        reward: float = self.reward_cost_ratio*(start_containers - end_containers)
+        if len(curr_job_queue_times) > 0:
+            reward += max(curr_job_queue_times)
+            reward += np.average(curr_job_queue_times)
         return reward
 
     """
@@ -200,7 +203,7 @@ class SystemWrapper(Env):
     Goes to the next step of the simulation
     
     Args:
-        action: the next action to be performed on the system
+        action: the target number of containers in the system (rounded to the nearest int)
         
     Returns:
         The state of the system after the action
@@ -208,16 +211,18 @@ class SystemWrapper(Env):
         Bool tracking if the system is done
         Other information associated with the system
     """
-    def step(self, action: int) -> typing.Tuple[np.ndarray, float, bool, bool, typing.Dict[str, typing.Any]]:
+    def step(self, action:np.float32) -> typing.Tuple[np.ndarray, float, bool, bool, typing.Dict[str, typing.Any]]:
         jobs:list[Job] = self.controller.get_queued_jobs()
         system:SimulatedSystem = self.controller.get_system()
-        actions:list[Action] = self.determine_actions(jobs=jobs, system=system, target_num_containers=action)
+        target_num_containers:int = np.rint(action).astype(int)
+        actions:list[Action] = self.determine_actions(jobs=jobs, system=system, target_num_containers=target_num_containers)
         start_containers:int = len(system.get_containers())
         self.controller.next_step(actions=actions)
         end_containers: int = len(system.get_containers())
         obs = self.generate_observation(jobs=jobs, system=system)
         reward = self.get_reward(start_containers=start_containers, end_containers=end_containers)
         done = self.controller.is_done()
+
         return obs, reward, done, False, {}
 
     """

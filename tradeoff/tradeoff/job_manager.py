@@ -24,7 +24,7 @@ Execution time distribution:
     exponential - location,scale
     skew_normal - location,scale,shape
 """
-def generate_jobs(job_meta_data_file_name:str, id_prefix:str="")->list[Job]:
+def generate_jobs_from_file(job_meta_data_file_name:str, id_prefix:str= "")->list[Job]:
     file:typing.TextIO = open(job_meta_data_file_name, "r")
     jobs:list[Job] = []
     id_suffix:int = 1
@@ -78,9 +78,90 @@ Args:
     
 Returns:
     list of generated jobs with bounds
+    
+File:
+    Each line is different set of jobs:
+    <num_jobs>,<start_time>,<end_time>,<execution time distribution>,<execution time distribution parameters comma seperated>
+    start_time, end_time - jobs are received uniformly in this time
+
+Execution time distribution:
+    poisson - location,rate
+    exponential - location,scale
+    skew_normal - location,scale,shape
 """
-def generate_bounded_jobs(job_meta_data_file_name:str, max_bound_size:int, id_prefix:str="")->list[Job]:
-    jobs:list[Job] = generate_jobs(job_meta_data_file_name=job_meta_data_file_name, id_prefix=id_prefix)
+def generate_bounded_jobs_from_file(job_meta_data_file_name:str, max_bound_size:int, id_prefix:str= "")->list[Job]:
+    jobs:list[Job] = generate_jobs_from_file(job_meta_data_file_name=job_meta_data_file_name, id_prefix=id_prefix)
+    for job in jobs:
+        bound_size:int = random.randint(1, max_bound_size)
+        bound_location:int = random.randint(1, bound_size)
+        true_time:int = job.get_execution_time()
+        min_bound:int = max(1, true_time+1-bound_location)
+        max_bound:int = true_time+bound_size-bound_location
+        job.add_other_info(key=Job.EXECUTION_TIME_LOWER_BOUND, value=str(min_bound))
+        job.add_other_info(key=Job.EXECUTION_TIME_UPPER_BOUND, value=str(max_bound))
+    return jobs
+
+"""
+Generates jobs from the provided meta data
+
+Args:
+    num_jobs: number of jobs being generated
+    start_time: earliest possible release time of jobs
+    end_time: latest possible release time of jobs
+    dist_name: type of execution time distribution
+    dist_params: parameters for execution time distribution
+    
+Returns:
+    list of generated jobs
+"""
+def generate_jobs(num_jobs:int, id_prefix:str, start_time:int, end_time:int, dist_name:str, dist_params:list[
+    float])->list[Job]:
+    jobs:list[Job] = []
+    id_suffix:int = 1
+    if dist_name == "poisson":
+        loc: float = dist_params[0]
+        mu: float = dist_params[1]
+        execution_times = [int(round(i)) for i in np.atleast_1d(poisson.rvs(mu=mu, loc=loc, size=num_jobs))]
+    elif dist_name == "exponential":
+        loc: float = dist_params[0]
+        scale: float = dist_params[1]
+        execution_times = [int(round(i)) for i in np.atleast_1d(expon.rvs(loc=loc, scale=scale, size=num_jobs))]
+    elif dist_name == "skew_normal":
+        loc = dist_params[0]
+        scale = dist_params[1]
+        a = dist_params[2]
+        execution_times = [int(round(i)) for i in np.atleast_1d(skewnorm.rvs(loc=loc, scale=scale, a=a, size=num_jobs))]
+    else:
+        raise ValueError('Metadata file did not specify a valid distribution name: ' + dist_name)
+
+    receival_times: list[int] = list(np.random.randint(low=start_time, high=end_time + 1, size=num_jobs))
+
+    for job_num in range(num_jobs):
+        job_id: str = id_prefix + str(id_suffix)
+        execution_time: int = execution_times[job_num]
+        receival_time: int = receival_times[job_num]
+        jobs.append(Job(job_id=job_id, execution_time=execution_time, receival_time=receival_time))
+        id_suffix += 1
+    return jobs
+
+"""
+Generates jobs with bounded execution times from provided meta data
+
+Args:
+    num_jobs: number of jobs being generated
+    start_time: earliest possible release time of jobs
+    end_time: latest possible release time of jobs
+    dist_name: type of execution time distribution
+    dist_params: parameters for execution time distribution
+    max_bound: maximum bound size of jobs
+    
+Returns:
+    list of generated jobs
+"""
+def generate_bounded_jobs(num_jobs:int, id_prefix:str, start_time:int, end_time:int, dist_name:str, dist_params:list[
+    float], max_bound_size)->list[Job]:
+    jobs:list[Job] = generate_jobs(num_jobs=num_jobs, id_prefix=id_prefix, start_time=start_time, end_time=end_time,
+                                   dist_name=dist_name,dist_params=dist_params)
     for job in jobs:
         bound_size:int = random.randint(1, max_bound_size)
         bound_location:int = random.randint(1, bound_size)

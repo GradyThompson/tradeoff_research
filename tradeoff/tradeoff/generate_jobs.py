@@ -13,9 +13,9 @@ args = parser.parse_args()
 config_file = args.job_config_file
 
 if args.max_bound:
-    jobs:list[Job] = job_manager.generate_bounded_jobs(job_meta_data_file_name=config_file,
-                                                       max_bound_size=int(args.max_bound))
+    jobs:list[Job] = job_manager.generate_bounded_jobs_from_file(job_meta_data_file_name=config_file,
+                                                                 max_bound_size=int(args.max_bound))
 else:
-    jobs: list[Job] = job_manager.generate_jobs(job_meta_data_file_name=config_file)
+    jobs: list[Job] = job_manager.generate_jobs_from_file(job_meta_data_file_name=config_file)
 
 job_manager.jobs_to_file(jobs, args.jobs_file)

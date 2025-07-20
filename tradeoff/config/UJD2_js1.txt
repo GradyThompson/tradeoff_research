@@ -1,0 +1,4 @@
+job_sets\rl_train_js1.txt
+result_data\UJD2_t1.txt
+UJD2,UJD2,0.5
+1

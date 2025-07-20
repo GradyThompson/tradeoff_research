@@ -40,6 +40,7 @@ class Controller:
                 model_params: list[str] = model_info[2:]
 
         if not no_model:
+
             model = Model(module_name=model_module_name, class_name=model_class_name, params=model_params)
             self.model:Model = model
 

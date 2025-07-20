@@ -1,8 +1,5 @@
 import typing
 from controller import Controller
-from simulated_system import SimulatedSystem
-from model import Model
-from job import Job
 
 """
 Performs an end to end test of a model

@@ -17,5 +17,5 @@ model_file = "model_data\\rl_max100"
 env = SystemWrapper(config_file_name=config_file, max_containers=100)
 
 model = PPO("MlpPolicy", env, verbose=1)
-model.learn(total_timesteps=200000)
+model.learn(total_timesteps=100000)
 model.save(model_file)
