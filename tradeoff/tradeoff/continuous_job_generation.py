@@ -14,7 +14,8 @@ class ContinuousJobGeneration:
 
     config_file:
         <execution time distributions>
-        <min num jobs in batch>,<max num jobs in batch>,<min job release range>,<max job release range>,"max_bound_size"
+        <min num jobs in batch>,<max num jobs in batch>,<min job release range>,<max job release range>,
+        <max_bound_size>,<time between intervals>
 
     execution time distributions:
         ; (semicolon) separated
@@ -32,10 +33,11 @@ class ContinuousJobGeneration:
                 params = []
 
                 params_input = exec_time_dist.split(",")[1:]
+                params_min_max_offset = len(params_input)//2
                 param_num = 0
                 while param_num < len(params_input)//2:
-                    params.append([int(params_input[param_num]), int(params_input[param_num+1])])
-                    param_num += 2
+                    params.append([int(params_input[param_num]), int(params_input[param_num+params_min_max_offset])])
+                    param_num += 1
 
                 self.exec_time_dists.append([exec_name, params])
 
@@ -67,12 +69,12 @@ class ContinuousJobGeneration:
         dist_name:str = dist[0]
         dist_param_bounds = dist[1]
         dist_params:list[float] = []
-        min_to_max_offset = len(dist_param_bounds)//2
         dist_param_ind = 0
-        while dist_param_ind < dist_param_bounds:
-            param_min = dist_param_bounds[dist_param_ind]
-            param_max = dist_param_bounds[dist_param_ind + min_to_max_offset]
+        while dist_param_ind < len(dist_param_bounds):
+            param_min = dist_param_bounds[dist_param_ind][0]
+            param_max = dist_param_bounds[dist_param_ind][1]
             dist_params.append(random.uniform(param_min, param_max))
+            dist_param_ind += 1
 
         jobs = job_manager.generate_bounded_jobs(num_jobs=num_jobs, id_prefix=id_prefix, start_time=time,
                                                            end_time=end_time, dist_name=dist_name,

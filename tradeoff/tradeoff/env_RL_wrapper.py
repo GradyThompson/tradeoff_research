@@ -10,6 +10,7 @@ from job import Job
 from container import Container
 from action import Action
 import heapq
+from continuous_job_generation import ContinuousJobGeneration
 
 class SystemWrapper(Env):
     """
@@ -19,16 +20,22 @@ class SystemWrapper(Env):
         config_file_name: name of the file containing the system config information
         max_containers: maximum number of containers
         reward_cost_ratio: ratio of cost to speed in reward function (higher cost ratio, is higher incentive to lower cost)
+        complex_job_config_file_name: name of file containing the information for complex job generation
     """
-    def __init__(self, config_file_name: str, max_containers: int, reward_cost_ratio: float):
+    def __init__(self, config_file_name: str, max_containers: int, reward_cost_ratio: float,
+                 complex_job_config_file_name:str=""):
         super().__init__()
 
-        self.action_space:spaces.Box = spaces.Box(low=0.0, high=max_containers, shape=(1,), dtype=np.float32)
+        self.action_space:spaces.Discrete = spaces.Discrete(max_containers)
         self.observation_space:spaces.Box = spaces.Box(low=-np.inf, high=np.inf, shape=(20,), dtype=np.float32)
 
         self.reward_cost_ratio:float = reward_cost_ratio
 
         self.controller: Controller = Controller(config_file_name=config_file_name, no_model=True)
+
+        if complex_job_config_file_name != "":
+            self.continuous_job_generator = ContinuousJobGeneration(config_file_name=complex_job_config_file_name)
+            self.last_job_generation_time = 0
 
     """
     Generates the state for the RL model given the system and queued jobs
@@ -126,11 +133,13 @@ class SystemWrapper(Env):
             heapq.heappush(container_times, container.time_until_done())
 
         for job in self.controller.get_queued_jobs():
-            start_time = heapq.heappop(container_times)
-            end_time = start_time + job.get_execution_time()
-            heapq.heappush(container_times, end_time)
-            job_queue_times.append(start_time)
-
+            if len(container_times) > 0:
+                start_time = heapq.heappop(container_times)
+                end_time = start_time + job.get_execution_time()
+                heapq.heappush(container_times, end_time)
+                job_queue_times.append(start_time)
+            else:
+                job_queue_times.append(1 + self.controller.get_system().get_startup_time() + self.controller.get_time() - job.get_receival_time())
         return job_queue_times
 
     """
@@ -200,6 +209,13 @@ class SystemWrapper(Env):
         return actions
 
     """
+    Adds jobs to the system if enough time has passed
+    """
+    def generate_jobs(self):
+        if hasattr(self, "continuous_job_generator") and self.controller.is_done():
+            self.controller.add_jobs(self.continuous_job_generator.generate_bounded_jobs(self.controller.get_time()))
+
+    """
     Goes to the next step of the simulation
     
     Args:
@@ -211,18 +227,20 @@ class SystemWrapper(Env):
         Bool tracking if the system is done
         Other information associated with the system
     """
-    def step(self, action:np.float32) -> typing.Tuple[np.ndarray, float, bool, bool, typing.Dict[str, typing.Any]]:
+    def step(self, action:int) -> typing.Tuple[np.ndarray, float, bool, bool, typing.Dict[str, typing.Any]]:
         jobs:list[Job] = self.controller.get_queued_jobs()
         system:SimulatedSystem = self.controller.get_system()
-        target_num_containers:int = np.rint(action).astype(int)
+        target_num_containers:int = action
         actions:list[Action] = self.determine_actions(jobs=jobs, system=system, target_num_containers=target_num_containers)
         start_containers:int = len(system.get_containers())
         self.controller.next_step(actions=actions)
         end_containers: int = len(system.get_containers())
         obs = self.generate_observation(jobs=jobs, system=system)
         reward = self.get_reward(start_containers=start_containers, end_containers=end_containers)
+        self.generate_jobs()
         done = self.controller.is_done()
-
+        assert np.isfinite(obs).all(), "Non-finite observation!"
+        assert np.isfinite(reward), "Non-finite reward!"
         return obs, reward, done, False, {}
 
     """

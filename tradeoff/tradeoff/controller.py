@@ -107,7 +107,12 @@ class Controller:
     def next_step(self, actions:list[Action] = None)->typing.Tuple[SimulatedSystem, list[Job]]:
         if not hasattr(self, "model") and actions is None:
             raise ValueError("No model nor action")
-        if self.wait_time == -1:
+        if self.is_done():
+            return self.system, self.queued_jobs
+
+        if self.wait_time == -1 and self.job_ind == len(self.jobs):
+            next_time = self.time
+        elif self.wait_time == -1:
             next_time = self.jobs[self.job_ind].get_receival_time()
         elif self.job_ind == len(self.jobs):
             next_time = self.wait_time
@@ -155,7 +160,7 @@ class Controller:
         True if the system is done and False otherwise
     """
     def is_done(self):
-        return self.job_ind >= len(self.jobs) and self.wait_time == -1
+        return self.job_ind >= len(self.jobs) and self.wait_time == -1 and len(self.queued_jobs) == 0
 
     """
     Runs the system until completion
