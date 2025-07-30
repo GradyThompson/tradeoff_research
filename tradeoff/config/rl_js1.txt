@@ -1,4 +1,0 @@
-job_sets\rl_train_js1.txt
-result_data\rl_js1.txt
-RL,RL,model_data/rl_max100.zip
-1

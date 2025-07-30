@@ -1,0 +1,4 @@
+job_sets\js1.txt
+result_data\rl_rr28_m100_js1.txt
+RL,RL,model_data/rl_rr28_m100
+1

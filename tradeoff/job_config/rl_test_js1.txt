@@ -1,0 +1,6 @@
+100,1,100,poisson,2,1
+60,20,180,exponential,5,2
+20,50,150,skew_normal,3,2,-1
+30,60,200,poisson,3,3
+200,110,300,exponential,7,5
+500,180,1000,skew_normal,4,2,2

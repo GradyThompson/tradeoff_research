@@ -17,7 +17,7 @@ max_reward_ratio = 5
 reward_ratio_increase_factor = 1.5
 reward_ratio_granularity = 0.1
 
-reward_ratio = 1.9
+reward_ratio = 5.1
 while reward_ratio < max_reward_ratio:
     model_file = "model_data\\rl_rr" + str(reward_ratio) +  "_max100"
 
