@@ -1,4 +1,4 @@
 job_sets\js1.txt
-result_data\result_FIFO_c100_js1.txt
-FIFO,FIFO,100
+result_data\FIFO_c100_js1.txt
+schedulers.FIFO,FIFO,100
 1

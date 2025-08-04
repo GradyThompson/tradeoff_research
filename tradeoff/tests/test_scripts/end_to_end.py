@@ -1,5 +1,5 @@
 import typing
-from controller import Controller
+from system.controller import Controller
 
 """
 Performs an end to end test of a model

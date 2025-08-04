@@ -1,5 +1,5 @@
 import argparse
-from controller import Controller
+from system.controller import Controller
 
 parser = argparse.ArgumentParser()
 parser.add_argument("config_file", help="Config file containing controller information (see controller doc)")

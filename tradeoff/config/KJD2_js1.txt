@@ -1,4 +1,4 @@
 job_sets\js1.txt
 result_data\KJD2_js1.txt
-KJD2,KJD2,0.5
+schedulers.KJD2,KJD2,0.5
 1
