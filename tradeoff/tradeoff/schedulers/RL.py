@@ -19,6 +19,7 @@ class RL:
 
     def __init__(self, params: list):
         model_name = params[0]
+        self.max_containers = int(params[1])
         self.model = PPO.load(model_name)
 
     """
@@ -35,7 +36,7 @@ class RL:
     def determine_actions(self, system: SimulatedSystem, pending_jobs: list[Job]) -> list[Action]:
         obs:np.ndarray = SystemWrapper.generate_observation(jobs=pending_jobs, system=system)
         action, _ = self.model.predict(observation=obs, deterministic=True)
-        target_num_containers:int = int(action)
+        target_num_containers = SystemWrapper.rescale_action(action, self.max_containers)
         actions:list[Action] = SystemWrapper.determine_actions(jobs=pending_jobs, system=system,
                                                                target_num_containers=target_num_containers)
         return actions

@@ -5,11 +5,14 @@ from system.controller import Controller
 Performs an end to end test of a model
 
 Args:
-    config_file: the configuration file for the controller
+    startup_duration: the startup time of the system
+    model_config_file: name of the file containing the model configuration information (empty if manual)
+    jobs_file: the file containing the jobs (empty if manual)
+    results_file: file where results will be stored (empty if manual)
     expected_file_name: the name of the file containing the expected output
 """
-def end_to_end_model_test(config_file_name:str, expected_file_name:str):
-    controller:Controller = Controller(config_file_name=config_file_name)
+def end_to_end_model_test(startup_duration:int, model_config_file:str, results_file:str, jobs_file:str, expected_file_name:str):
+    controller:Controller = Controller(startup_duration=startup_duration, model_config_file=model_config_file, results_file=results_file, jobs_file=jobs_file)
     results_file_name:str = controller.control_loop()
 
     with open(results_file_name, 'r') as results_file, open(expected_file_name, 'r') as expected_file:

@@ -116,8 +116,8 @@ class Container:
     def time_when_job_run(self, job:Job)->int:
         run_time:int = self.curr_time
         run_time -= self.job_progress
-        for job in self.jobs:
-            if job == job:
+        for j in self.jobs:
+            if j == job:
                 break
             run_time += job.get_execution_time()
         return run_time

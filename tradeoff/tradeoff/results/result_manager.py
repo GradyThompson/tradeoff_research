@@ -2,6 +2,7 @@ from system.simulated_system import SimulatedSystem
 from system.job import Job
 import typing
 import matplotlib.pyplot as plt
+import numpy as np
 
 """
 Saves the system performance results, including cost and queue time information
@@ -55,7 +56,7 @@ Scheduler name:
     <scheduler class>,<scheduler name>
 """
 def plot_max_queue_v_cost(scheduler_result_data: typing.Dict[str, str]):
-    labelled_data:typing.Dict[str, list[list[int]]] = {}
+    labelled_data:typing.Dict[str, list[list]] = {}
     for scheduler in scheduler_result_data.keys():
         scheduler_class = scheduler.split("_")[0]
         result_file_name = scheduler_result_data.get(scheduler)
@@ -72,6 +73,38 @@ def plot_max_queue_v_cost(scheduler_result_data: typing.Dict[str, str]):
     plt.xlabel("Cost")
     plt.ylabel("Maximum Queue Time")
     plt.title('Cost vs Maximum Queue Time')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+"""
+Plots the graph of average queue delay vs cost for multiple schedulers
+
+Args:
+    scheduler_result_data: mapping of the name of schedulers to the name of the file containing their results
+
+Scheduler name:
+    <scheduler class>,<scheduler name>
+"""
+
+def plot_avg_queue_v_cost(scheduler_result_data: typing.Dict[str, str]):
+    labelled_data: typing.Dict[str, list[list]] = {}
+    for scheduler in scheduler_result_data.keys():
+        scheduler_class = scheduler.split("_")[0]
+        result_file_name = scheduler_result_data.get(scheduler)
+        cost, queue_times = load_file_results(result_file_name)
+        if scheduler_class in labelled_data.keys():
+            labelled_data[scheduler_class][0].append(cost)
+            labelled_data[scheduler_class][1].append(np.mean(queue_times))
+        else:
+            labelled_data[scheduler_class] = [[cost], [np.mean(queue_times)]]
+    for label in labelled_data.keys():
+        costs = labelled_data.get(label)[0]
+        max_queue_times = labelled_data.get(label)[1]
+        plt.scatter(x=costs, y=max_queue_times, label=label)
+    plt.xlabel("Cost")
+    plt.ylabel("Average Queue Time")
+    plt.title('Cost vs Average Queue Time')
     plt.legend()
     plt.grid(True)
     plt.show()

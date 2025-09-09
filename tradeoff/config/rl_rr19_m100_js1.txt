@@ -1,4 +1,0 @@
-job_sets\js1.txt
-result_data\rl_rr19_m100_js1.txt
-schedulers.RL,RL,model_data/rl_rr19_m100
-1

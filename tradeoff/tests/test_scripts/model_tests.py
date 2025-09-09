@@ -9,10 +9,17 @@ expected
 container number = 10
 """
 def fifo_test_1():
-    config_file_name:str = "tests\\config\\FIFO_t1.txt"
-    expected_file_name:str = "tests\\expected\\FIFO_t1.txt"
     print("FIFO test 1")
-    end_to_end_model_test(config_file_name=config_file_name, expected_file_name=expected_file_name)
+    startup_duration: int = 1
+    model_config_file:str = "model_config\\FIFO_c10.txt"
+    expected_file:str = "tests\\expected\\FIFO_t1.txt"
+    jobs_file:str = "tests\\job_sets\\FIFO_t1.txt"
+    results_file:str = "tests\\results\\FIFO_t1.txt"
+    end_to_end_model_test(startup_duration=startup_duration,
+                          model_config_file=model_config_file,
+                          results_file=results_file,
+                          jobs_file=jobs_file,
+                          expected_file_name=expected_file)
     print()
 
 """
@@ -24,10 +31,17 @@ expected
 epsilon = 0.5
 """
 def kjd1_test_1():
-    config_file_name:str = "tests\\config\\KJD1_t1.txt"
-    expected_file_name:str = "tests\\expected\\KJD1_t1.txt"
     print("KJD1 test 1")
-    end_to_end_model_test(config_file_name=config_file_name, expected_file_name=expected_file_name)
+    startup_duration: int = 1
+    model_config_file:str = "model_config\\KJD1_e0.5.txt"
+    expected_file:str = "tests\\expected\\KJD1_t1.txt"
+    jobs_file:str = "tests\\job_sets\\KJD1_t1.txt"
+    results_file:str = "tests\\results\\KJD1_t1.txt"
+    end_to_end_model_test(startup_duration=startup_duration,
+                          model_config_file=model_config_file,
+                          results_file=results_file,
+                          jobs_file=jobs_file,
+                          expected_file_name=expected_file)
     print()
 
 """
@@ -39,10 +53,17 @@ expected
 epsilon = 0.5
 """
 def kjd2_test_1():
-    config_file_name:str = "tests\\config\\KJD2_t1.txt"
-    expected_file_name:str = "tests\\expected\\KJD2_t1.txt"
     print("KJD2 test 1")
-    end_to_end_model_test(config_file_name=config_file_name, expected_file_name=expected_file_name)
+    startup_duration: int = 1
+    model_config_file:str = "model_config\\KJD2_e0.5.txt"
+    expected_file:str = "tests\\expected\\KJD2_t1.txt"
+    jobs_file:str = "tests\\job_sets\\KJD2_t1.txt"
+    results_file:str = "tests\\results\\KJD2_t1.txt"
+    end_to_end_model_test(startup_duration=startup_duration,
+                          model_config_file=model_config_file,
+                          results_file=results_file,
+                          jobs_file=jobs_file,
+                          expected_file_name=expected_file)
     print()
 
 """
@@ -54,10 +75,17 @@ expected
 epsilon = 0.5
 """
 def ujd1_test_1():
-    config_file_name:str = "tests\\config\\UJD1_t1.txt"
-    expected_file_name:str = "tests\\expected\\UJD1_t1.txt"
     print("UJD1 test 1")
-    end_to_end_model_test(config_file_name=config_file_name, expected_file_name=expected_file_name)
+    startup_duration: int = 1
+    model_config_file:str = "model_config\\UJD1_e0.5.txt"
+    expected_file:str = "tests\\expected\\UJD1_t1.txt"
+    jobs_file:str = "tests\\job_sets\\UJD1_t1.txt"
+    results_file:str = "tests\\results\\UJD1_t1.txt"
+    end_to_end_model_test(startup_duration=startup_duration,
+                          model_config_file=model_config_file,
+                          results_file=results_file,
+                          jobs_file=jobs_file,
+                          expected_file_name=expected_file)
     print()
 
 """
@@ -69,10 +97,17 @@ expected
 epsilon = 0.5
 """
 def ujd2_test_1():
-    config_file_name:str = "tests\\config\\UJD2_t1.txt"
-    expected_file_name:str = "tests\\expected\\UJD2_t1.txt"
     print("UJD2 test 1")
-    end_to_end_model_test(config_file_name=config_file_name, expected_file_name=expected_file_name)
+    startup_duration: int = 1
+    model_config_file:str = "model_config\\UJD2_e0.5.txt"
+    expected_file:str = "tests\\expected\\UJD2_t1.txt"
+    jobs_file:str = "tests\\job_sets\\UJD2_t1.txt"
+    results_file:str = "tests\\results\\UJD2_t1.txt"
+    end_to_end_model_test(startup_duration=startup_duration,
+                          model_config_file=model_config_file,
+                          results_file=results_file,
+                          jobs_file=jobs_file,
+                          expected_file_name=expected_file)
     print()
 
 """

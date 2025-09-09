@@ -1,5 +1,6 @@
 from system.job import Job
-import job_manager
+import jobs.job_manager as job_manager
+
 import random
 
 """

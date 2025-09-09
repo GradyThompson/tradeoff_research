@@ -1,3 +1,0 @@
-job_sets\rl_train_js1.txt
-result_data\rl_train_js1.txt
-1

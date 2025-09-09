@@ -1,4 +1,4 @@
-from results import result_manager
+import results.result_manager as result_manager
 
 result_data_folder = "result_data\\"
 job_set = "js1"
@@ -10,3 +10,4 @@ for scheduler in schedulers:
     scheduler_data[scheduler] = result_data_folder + scheduler + "_" + job_set + ".txt"
 
 result_manager.plot_max_queue_v_cost(scheduler_data)
+result_manager.plot_avg_queue_v_cost(scheduler_data)

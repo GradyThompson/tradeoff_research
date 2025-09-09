@@ -16,21 +16,23 @@ class SystemWrapper(Env):
     Constructor for the RL model
     
     Args:
-        config_file_name: name of the file containing the system config information
+        startup_duration: how long it takes for a container to startup
+        jobs_file: file where the initial jobs are stored
         max_containers: maximum number of containers
         reward_cost_ratio: ratio of cost to speed in reward function (higher cost ratio, is higher incentive to lower cost)
         complex_job_config_file_name: name of file containing the information for complex job generation
     """
-    def __init__(self, config_file_name: str, max_containers: int, reward_cost_ratio: float,
+    def __init__(self, startup_duration:int, jobs_file:str, max_containers: int, reward_cost_ratio: float,
                  complex_job_config_file_name:str=""):
         super().__init__()
 
-        self.action_space:spaces.Discrete = spaces.Discrete(max_containers)
+        self.action_space = spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32)
+        self.max_containers = max_containers
         self.observation_space:spaces.Box = spaces.Box(low=-np.inf, high=np.inf, shape=(20,), dtype=np.float32)
 
         self.reward_cost_ratio:float = reward_cost_ratio
 
-        self.controller: Controller = Controller(config_file_name=config_file_name, no_model=True)
+        self.controller: Controller = Controller(startup_duration=startup_duration,jobs_file=jobs_file, manual_control=True)
 
         if complex_job_config_file_name != "":
             self.continuous_job_generator = ContinuousJobGeneration(config_file_name=complex_job_config_file_name)
@@ -111,46 +113,72 @@ class SystemWrapper(Env):
         return obs, {}
 
     """
-    Determines when each job would be run if the system is not changed
+    Finds the maximum queue time and cost given the target number of containers
     
     Returns:
-        The list of job queue times
+        cost, max_queue_time
     """
-    def get_job_queue_times(self)->list[int]:
-        system:SimulatedSystem = self.controller.get_system()
-        containers:set[Container] = system.get_containers()
+    def simulate_system(self, target_num_containers:int):
+        cost: int = 0
+        max_queue_time: int = 0
 
-        job_queue_times:list[int] = []
+        is_zero = False
+        if target_num_containers == 0:
+            is_zero = True
+            target_num_containers = 1
 
-        container_times:list[int] = []
+        system: SimulatedSystem = self.controller.get_system()
+        containers: set[Container] = system.get_containers()
+        job_queue_times: list[int] = []
+        container_times: list[int] = []
         heapq.heapify(container_times)
         for container in containers:
             jobs = container.get_jobs()
             for job in jobs:
-                job_queue_time = container.time_when_job_run(job) - job.get_receival_time()
+                job_queue_time = max(container.time_when_job_run(job) - job.get_receival_time(), 0)
                 job_queue_times.append(job_queue_time)
             heapq.heappush(container_times, container.time_until_done())
 
+        #Removes excess containers and adds time to cost
+        while len(container_times) > target_num_containers:
+            cost += heapq.heappop(container_times)
+
+        #Adds new containers
+        while len (container_times) < target_num_containers:
+            heapq.heappush(container_times, 0)
+            cost += system.get_startup_time()
+
+        #Approximates time of unassigned jobs
         for job in self.controller.get_queued_jobs():
-            if len(container_times) > 0:
-                start_time = heapq.heappop(container_times)
-                end_time = start_time + job.get_execution_time()
-                heapq.heappush(container_times, end_time)
-                job_queue_times.append(start_time)
-            else:
-                job_queue_times.append(1 + self.controller.get_system().get_startup_time() + self.controller.get_time() - job.get_receival_time())
-        return job_queue_times
+            start_time = heapq.heappop(container_times)
+            end_time = start_time + job.get_execution_time()
+            heapq.heappush(container_times, end_time)
+            job_queue_times.append(start_time)
+
+        if len(job_queue_times) > 0:
+            max_queue_time = max(job_queue_times)
+
+        cost += max(container_times)*len(container_times)
+
+        # Punish having zero containers with waiting tasks
+        if len(self.controller.get_queued_jobs()) > 0 and is_zero:
+            max_queue_time *= 2
+
+        return [cost, max_queue_time]
 
     """
     Generates the reward of the action given the initial state and the next state
+    
+    reward = ratio*log(curr_cost)/log(opt_cost) + log(curr_max_queue)/log(opt_max_queue)
     """
-    def get_reward(self, start_containers:int, end_containers:int)->float:
-        curr_job_queue_times: list[int] = self.get_job_queue_times()
-
-        reward: float = self.reward_cost_ratio*(start_containers - end_containers)
-        if len(curr_job_queue_times) > 0:
-            reward += max(curr_job_queue_times)
-            reward += np.average(curr_job_queue_times)
+    def get_reward(self, target_num_containers:int)->float:
+        min_cost, max_max_queue_time = self.simulate_system(target_num_containers=0)
+        max_cost, min_max_queue_time = self.simulate_system(target_num_containers=self.max_containers)
+        cost, max_queue_time = self.simulate_system(target_num_containers=target_num_containers)
+        reward = 0
+        reward -= self.reward_cost_ratio * target_num_containers / self.max_containers
+        if max_max_queue_time != min_max_queue_time:
+            reward -= (max_queue_time - min_max_queue_time)/(max_max_queue_time - min_max_queue_time)
         return reward
 
     """
@@ -215,6 +243,13 @@ class SystemWrapper(Env):
             self.controller.add_jobs(self.continuous_job_generator.generate_bounded_jobs(self.controller.get_time()))
 
     """
+    Rescales the action value to a number of containers
+    """
+    @staticmethod
+    def rescale_action(action, max_containers):
+        return int((action+1)*max_containers//2)
+
+    """
     Goes to the next step of the simulation
     
     Args:
@@ -229,13 +264,11 @@ class SystemWrapper(Env):
     def step(self, action:int) -> typing.Tuple[np.ndarray, float, bool, bool, typing.Dict[str, typing.Any]]:
         jobs:list[Job] = self.controller.get_queued_jobs()
         system:SimulatedSystem = self.controller.get_system()
-        target_num_containers:int = action
+        target_num_containers:int = self.rescale_action(action, self.max_containers)
         actions:list[Action] = self.determine_actions(jobs=jobs, system=system, target_num_containers=target_num_containers)
-        start_containers:int = len(system.get_containers())
         self.controller.next_step(actions=actions)
-        end_containers: int = len(system.get_containers())
         obs = self.generate_observation(jobs=jobs, system=system)
-        reward = self.get_reward(start_containers=start_containers, end_containers=end_containers)
+        reward = self.get_reward(target_num_containers=target_num_containers)
         self.generate_jobs()
         done = self.controller.is_done()
         assert np.isfinite(obs).all(), "Non-finite observation!"
