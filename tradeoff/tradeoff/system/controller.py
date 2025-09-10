@@ -132,6 +132,8 @@ class Controller:
         else:
             next_time = min(self.jobs[self.job_ind].get_receival_time(), wait_time)
 
+        next_time = max(next_time, self.time + 1)
+
         self.system.run(next_time)
 
         while self.job_ind < len(self.jobs) and self.jobs[self.job_ind].get_receival_time() <= self.system.get_time():

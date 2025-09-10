@@ -1,13 +1,17 @@
-import results.result_manager as result_manager
+import tradeoff.results.result_manager as result_manager
+import os
 
-result_data_folder = "result_data\\"
+result_data_folder = "result_data"
 job_set = "js1"
-schedulers = ["FIFO_c100", "KJD1", "KJD2", "UJD1", "UJD2", "rl_rr01_m100", "rl_rr02_m100", "rl_rr03_m100",
-              "rl_rr04_m100", "rl_rr06_m100", "rl_rr09_m100", "rl_rr13_m100", "rl_rr19_m100", "rl_rr28_m100",
-              "rl_rr41_m100"]
-scheduler_data = {}
-for scheduler in schedulers:
-    scheduler_data[scheduler] = result_data_folder + scheduler + "_" + job_set + ".txt"
 
-result_manager.plot_max_queue_v_cost(scheduler_data)
-result_manager.plot_avg_queue_v_cost(scheduler_data)
+model_config_folder = "model_config"
+job_set_folder = "job_sets"
+results_folder = "result_data"
+
+model_data = {}
+model_names = [os.path.splitext(f)[0] for f in os.listdir(model_config_folder) if os.path.isfile(os.path.join(model_config_folder, f))]
+for model_name in model_names:
+    model_data[model_name] = result_data_folder + "/" + model_name + "_" + job_set + ".txt"
+
+result_manager.plot_max_queue_v_cost(model_data)
+result_manager.plot_avg_queue_v_cost(model_data)

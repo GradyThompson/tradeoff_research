@@ -1,5 +1,5 @@
-from system.simulated_system import SimulatedSystem
-from system.job import Job
+from tradeoff.system.simulated_system import SimulatedSystem
+from tradeoff.system.job import Job
 import typing
 import matplotlib.pyplot as plt
 import numpy as np

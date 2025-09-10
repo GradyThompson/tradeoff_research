@@ -1,7 +1,7 @@
 import typing
 
-from system.job import Job
-from system.container import Container
+from tradeoff.system.job import Job
+from tradeoff.system.container import Container
 
 """
 Class containing action information

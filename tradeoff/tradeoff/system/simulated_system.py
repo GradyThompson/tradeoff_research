@@ -1,8 +1,8 @@
 import typing
 
-from system.container import Container
-from system.job import Job
-from system.action import Action
+from tradeoff.system.container import Container
+from tradeoff.system.job import Job
+from tradeoff.system.action import Action
 
 """
 System with the following properties:
