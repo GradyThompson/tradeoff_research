@@ -1,5 +1,5 @@
 import typing
-from system.controller import Controller
+from tradeoff.system.controller import Controller
 
 """
 Performs an end to end test of a model

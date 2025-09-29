@@ -1,7 +1,7 @@
-from system import simulated_system as sim_sys
-from system.job import Job
-from system.action import Action
-from system.container import Container
+import tradeoff.system.simulated_system as sim_sys
+from tradeoff.system.job import Job
+from tradeoff.system.action import Action
+from tradeoff.system.container import Container
 import typing
 
 """

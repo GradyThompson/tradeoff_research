@@ -1,9 +1,9 @@
-from system.simulated_system import SimulatedSystem
-from system.job import Job
-from schedulers.model import Model
-from jobs import job_manager
-from system.action import Action
-from results import result_manager
+from tradeoff.system.simulated_system import SimulatedSystem
+from tradeoff.system.job import Job
+from tradeoff.schedulers.model import Model
+from tradeoff.jobs import job_manager
+from tradeoff.system.action import Action
+from tradeoff.results import result_manager
 import typing
 import heapq
 

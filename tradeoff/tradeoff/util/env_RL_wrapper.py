@@ -3,13 +3,13 @@ from gymnasium.core import Env
 import numpy as np
 import numpy.typing as npt
 import typing
-from system.controller import Controller
-from system.simulated_system import SimulatedSystem
-from system.job import Job
-from system.container import Container
-from system.action import Action
+from tradeoff.system.controller import Controller
+from tradeoff.system.simulated_system import SimulatedSystem
+from tradeoff.system.job import Job
+from tradeoff.system.container import Container
+from tradeoff.system.action import Action
 import heapq
-from jobs.continuous_job_generation import ContinuousJobGeneration
+from tradeoff.jobs.continuous_job_generation import ContinuousJobGeneration
 
 class SystemWrapper(Env):
     """

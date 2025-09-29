@@ -1,10 +1,10 @@
 import typing
 import math
-from system.simulated_system import SimulatedSystem
-from system.job import Job
-from system.action import Action
-from system.container import Container
-import util.scheduler_util as scheduler_util
+from tradeoff.system.simulated_system import SimulatedSystem
+from tradeoff.system.job import Job
+from tradeoff.system.action import Action
+from tradeoff.system.container import Container
+import tradeoff.util.scheduler_util as scheduler_util
 
 """
 Unknown job duration algorithm 1

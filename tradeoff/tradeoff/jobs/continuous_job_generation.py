@@ -1,5 +1,5 @@
-from system.job import Job
-import jobs.job_manager as job_manager
+from tradeoff.system.job import Job
+import tradeoff.jobs.job_manager as job_manager
 
 import random
 

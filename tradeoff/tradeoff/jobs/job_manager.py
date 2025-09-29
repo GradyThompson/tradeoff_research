@@ -1,6 +1,6 @@
 from scipy.stats import poisson, expon, skewnorm
 import numpy as np
-from system.job import Job
+from tradeoff.system.job import Job
 import typing
 import random
 

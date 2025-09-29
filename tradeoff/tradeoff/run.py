@@ -1,5 +1,5 @@
 import argparse
-from system.controller import Controller
+from tradeoff.system.controller import Controller
 
 parser = argparse.ArgumentParser()
 parser.add_argument("model_name", help="Name of model (<config folder>\\<model_name>.txt")

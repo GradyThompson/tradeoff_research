@@ -1,6 +1,6 @@
 import argparse
-import job_manager
-from system.job import Job
+import tradeoff.jobs.job_manager as job_manager
+from tradeoff.system.job import Job
 
 """
 Generates jobs to a specified file

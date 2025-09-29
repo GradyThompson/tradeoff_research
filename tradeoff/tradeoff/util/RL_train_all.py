@@ -25,7 +25,7 @@ while reward_ratio < max_reward_ratio:
     model.save(model_file)
 
     #< model_module_name >, < model_class_name >, < model params(comma separated) >
-    module_name = "schedulers.RL"
+    module_name = "tradeoff.schedulers.RL"
     class_name = "RL"
     model_config = ",".join([module_name, class_name, model_file, str(max_containers)])
 

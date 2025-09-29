@@ -1,5 +1,5 @@
 import argparse
-from system.controller import Controller
+from tradeoff.system.controller import Controller
 import os
 
 parser = argparse.ArgumentParser()

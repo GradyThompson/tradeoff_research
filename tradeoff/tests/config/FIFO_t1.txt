@@ -1,4 +1,4 @@
-tests\job_sets\FIFO_t1.txt
-tests\results\FIFO_t1.txt
-schedulers.FIFO,FIFO,10
+tests/job_sets/FIFO_t1.txt
+tests/results/FIFO_t1.txt
+tradeoff.schedulers.FIFO,FIFO,10
 1

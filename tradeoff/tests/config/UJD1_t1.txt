@@ -1,4 +1,4 @@
-tests\job_sets\UJD1_t1.txt
-tests\results\UJD1_t1.txt
-schedulers.UJD1,UJD1,0.5
+tests/job_sets/UJD1_t1.txt
+tests/results/UJD1_t1.txt
+tradeoff.schedulers.UJD1,UJD1,0.5
 1

@@ -1,7 +1,7 @@
 import typing
-from system.simulated_system import SimulatedSystem
-from system.action import Action
-from system.container import Container
+from tradeoff.system.simulated_system import SimulatedSystem
+from tradeoff.system.action import Action
+from tradeoff.system.container import Container
 
 """
 Terminates the containers that have no work left to do and returns the time of the next container shutdown if no 

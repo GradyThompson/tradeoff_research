@@ -1,8 +1,8 @@
-from system.simulated_system import SimulatedSystem
-from system.job import Job
-from system.action import Action
+from tradeoff.system.simulated_system import SimulatedSystem
+from tradeoff.system.job import Job
+from tradeoff.system.action import Action
 from stable_baselines3 import PPO
-from util.env_RL_wrapper import SystemWrapper
+from tradeoff.util.env_RL_wrapper import SystemWrapper
 import numpy as np
 
 """
